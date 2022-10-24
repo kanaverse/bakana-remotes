@@ -9,6 +9,10 @@ const registry = {
     "zeisel-brain": { "counts": "2596", "coldata": "2598", "rowdata": "2597" } // corresponding to EH2580, 2582 and 2581, for whatever reason.
 };
 
+export function availableDatasets() {
+    return Object.keys(registry);
+}
+
 export function abbreviate(args) {
     return {
         "format": "ExperimentHub", 
