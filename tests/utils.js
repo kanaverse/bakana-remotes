@@ -1,13 +1,18 @@
 import * as fs from "fs";
 import * as bakana from "bakana";
 import * as utils from "../src/utils.js";
+import * as valkana from "valkana";
 import "isomorphic-fetch";
 
 export async function initializeAll() {
     await bakana.initialize({ localFile: true });
+    await valkana.initialize({ localFile: true });
 }
 
 utils.setDownloadFun(async url => {
+    if (!fs.existsSync("files")) {
+        fs.mkdirSync("files");
+    }
     let path = "files/" + encodeURIComponent(url);
 
     if (!fs.existsSync(path)) {
@@ -41,4 +46,18 @@ export function baseParams() {
         human_references: [ "BlueprintEncode" ]
     };
     return output;
+}
+
+export function validateState(path, embedded = true) {
+    valkana.validateState(path, embedded, bakana.kanaFormatVersion);
+}
+
+export function mockOffsets(paths) {
+    let offsets = {};
+    let sofar = 0;
+    for (const p of paths) {
+        offsets[sofar] = p;
+        sofar += fs.statSync(p).size;
+    }
+    return offsets;
 }

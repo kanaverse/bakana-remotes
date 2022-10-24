@@ -1,6 +1,7 @@
 import * as scran from "scran.js";
 import * as bakana from "bakana";
 import * as utils from "./utils.js";
+import * as abs from "./abstract/AbstractFile.js";
 
 const baseUrl = "https://experimenthub.bioconductor.org/fetch";
 
@@ -167,6 +168,10 @@ export async function preflight(args) {
 export class Reader {
     #id;
 
+    get id() {
+        return this.#id;
+    }
+
     constructor(args, formatted = false) {
         this.#id = args.id;
         if (!(this.#id in registry)) {
@@ -213,6 +218,7 @@ export class Reader {
 
             output.matrix.add("RNA", counts.matrix);
             if (counts.row_ids) {
+                output.row_ids = { RNA: counts.row_ids };
                 for (const [k, v] of Object.entries(output.genes.RNA)) {
                     output.genes.RNA[k] = scran.quickSliceArray(counts.row_ids, v);
                 }
@@ -237,11 +243,15 @@ export class Reader {
             name: "id"
         };
 
-        const enc = new TextEncoder;
-        let buffer = enc.encode(this.#id);
-        let eout = embeddedSaver(buffer.buffer, buffer.length);
-        output.offset = eout.offset;
-        output.size = eout.size;
+        if (embeddedSaver == null) {
+            output.id = this.#id;
+        } else {
+            const enc = new TextEncoder;
+            let buffer = enc.encode(this.#id);
+            let eout = embeddedSaver(abs.dumpToTemporary(buffer), buffer.length);
+            output.offset = eout.offset;
+            output.size = eout.size;
+        }
 
         return [ output ];
     }
@@ -253,13 +263,11 @@ export async function unserialize(values, embeddedLoader) {
     // This should contain 'id'.
     for (const x of values) {
         let id2 = await embeddedLoader(x.offset, x.size);
-        if (typeof id2 == "string") {
-            throw new Error("not yet supported!"); // TODO: expose bakana's abstract LoadedFile to handle this.
-        } else {
-            const dec = new TextDecoder;
-            args[x.type] = dec.decode(new Uint8Array(id2));
-        }
+        let f = new abs.AbstractFile(id2);
+        let contents = f.buffer();
+        const dec = new TextDecoder;
+        args[x.type] = dec.decode(new Uint8Array(contents));
     }
 
-    return new Reader(args, true);
+    return new Reader(args);
 }
