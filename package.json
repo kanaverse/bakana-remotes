@@ -1,6 +1,6 @@
 {
   "name": "bakana-remotes",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Fetch remote single-cell RNA-seq datasets for input into the bakana analysis pipeline.",
   "type": "module",
   "scripts": {
@@ -34,6 +34,10 @@
     "valkana": "^0.0.4"
   },
   "exports": {
+    ".": {
+      "main": "main/utils.js",
+      "browser": "browser/utils.js"
+    },
     "./ExperimentHub": {
       "node": "main/ExperimentHub.js",
       "default": "browser/ExperimentHub.js"
