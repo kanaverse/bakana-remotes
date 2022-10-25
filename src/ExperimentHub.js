@@ -3,7 +3,6 @@ import * as bakana from "bakana";
 import * as utils from "./utils.js";
 import * as abs from "./abstract/AbstractFile.js";
 
-const proxy = "https://cors-proxy.aaron-lun.workers.dev";
 const baseUrl = "https://experimenthub.bioconductor.org/fetch";
 
 const registry = {
@@ -135,7 +134,7 @@ export async function preflight(args) {
 
     let output_anno = {};
     {
-        let coldata_deets = await utils.downloadFun(proxy + "/" + encodeURIComponent(baseUrl + "/" + details.coldata));
+        let coldata_deets = await utils.downloadFun(baseUrl + "/" + details.coldata);
         let coldata_load;
         let coldata_handle; 
         let cd_df;
@@ -154,7 +153,7 @@ export async function preflight(args) {
 
     let output_feat = {};
     {
-        let rowdata_deets = await utils.downloadFun(proxy + "/" + encodeURIComponent(baseUrl + "/" + details.rowdata));
+        let rowdata_deets = await utils.downloadFun(baseUrl + "/" + details.rowdata);
         let rowdata_load;
         let rowdata_handle;
         try {
@@ -188,7 +187,7 @@ export class Reader {
         let details = registry[this.#id];
         let output = {};
 
-        let coldata_deets = await utils.downloadFun(proxy + "/" + encodeURIComponent(baseUrl + "/" + details.coldata));
+        let coldata_deets = await utils.downloadFun(baseUrl + "/" + details.coldata);
         let coldata_load;
         let coldata_handle;
         try {
@@ -200,7 +199,7 @@ export class Reader {
             scran.free(coldata_load);
         }
 
-        let rowdata_deets = await utils.downloadFun(proxy + "/" + encodeURIComponent(baseUrl + "/" + details.rowdata));
+        let rowdata_deets = await utils.downloadFun(baseUrl + "/" + details.rowdata);
         let rowdata_load;
         let rowdata_handle;
         try {
@@ -212,7 +211,7 @@ export class Reader {
             scran.free(rowdata_load);
         }
 
-        let counts_deets = await utils.downloadFun(proxy + "/" + encodeURIComponent(baseUrl + "/" + details.counts));
+        let counts_deets = await utils.downloadFun(baseUrl + "/" + details.counts);
         let counts_load;
         let counts_handle;
         try {
@@ -276,3 +275,7 @@ export async function unserialize(values, embeddedLoader) {
 
     return new Reader(args);
 }
+
+export function setDownloadFun(fun) {
+    return utils.setDownloadFun(fun);
+};
