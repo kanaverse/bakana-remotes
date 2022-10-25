@@ -34,6 +34,10 @@
     "valkana": "^0.0.4"
   },
   "exports": {
+    ".": {
+      "main": "main/utils.js",
+      "browser": "browser/utils.js"
+    },
     "./ExperimentHub": {
       "node": "main/ExperimentHub.js",
       "default": "browser/ExperimentHub.js"

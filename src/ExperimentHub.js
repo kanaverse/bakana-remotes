@@ -275,7 +275,3 @@ export async function unserialize(values, embeddedLoader) {
 
     return new Reader(args);
 }
-
-export function setDownloadFun(fun) {
-    return utils.setDownloadFun(fun);
-};
