@@ -3,8 +3,10 @@
   "version": "0.1.1",
   "description": "Fetch remote single-cell RNA-seq datasets for input into the bakana analysis pipeline.",
   "type": "module",
+  "main": "src/index.js",
   "scripts": {
-    "test": "node --experimental-vm-modules --experimental-wasm-threads node_modules/jest/bin/jest.js --testTimeout=1000000 --runInBand --detectOpenHandles --forceExit"
+    "test": "node --experimental-vm-modules --experimental-wasm-threads node_modules/jest/bin/jest.js --testTimeout=1000000 --runInBand --detectOpenHandles --forceExit",
+    "jsdoc": "npx jsdoc -r src README.md -d docs/built -c docs/jsdoc.config.json"
   },
   "repository": "github:LTLA/bakana-remotes",
   "homepage": "https://github.com/LTLA/bakana-remotes#readme",
@@ -23,8 +25,9 @@
   "dependencies": {
     "pako": "^2.0.4",
     "papaparse": "^5.3.2",
-    "bakana": "~0.6.0",
-    "scran.js": "~0.6.0"
+    "bakana": "^1.0.1",
+    "scran.js": "^1.0.2",
+    "bioconductor": "^0.1.1"
   },
   "devDependencies": {
     "docdash": "^1.2.0",
@@ -32,15 +35,5 @@
     "jest": "^27.5.1",
     "jsdoc": "^3.6.10",
     "valkana": "^0.0.4"
-  },
-  "exports": {
-    ".": {
-      "main": "main/utils.js",
-      "browser": "browser/utils.js"
-    },
-    "./ExperimentHub": {
-      "node": "main/ExperimentHub.js",
-      "default": "browser/ExperimentHub.js"
-    }
   }
 }

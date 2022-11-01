@@ -9,7 +9,7 @@ export async function initializeAll() {
     await valkana.initialize({ localFile: true });
 }
 
-utils.setDownloadFun(async url => {
+async function downloader(url) {
     if (!fs.existsSync("files")) {
         fs.mkdirSync("files");
     }
@@ -26,9 +26,13 @@ utils.setDownloadFun(async url => {
         return contents;
     }
 
-    let obj = fs.readFileSync(path);
-    return obj.buffer.slice(obj.byteOffset, obj.byteOffset + obj.byteLength);
-});
+    // Node.js buffers are Uint8Arrays, so we can just return it without casting,
+    // though we need to make a copy to avoid overwriting.
+    return fs.readFileSync(path).slice();
+}
+
+bakana.setCellLabellingDownload(downloader);
+utils.setDownloadFun(downloader);
 
 export function baseParams() {
     let output = bakana.analysisDefaults();
@@ -52,12 +56,12 @@ export function validateState(path, embedded = true) {
     valkana.validateState(path, embedded, bakana.kanaFormatVersion);
 }
 
-export function mockOffsets(paths) {
+export function mockOffsets(buffers) {
     let offsets = {};
     let sofar = 0;
-    for (const p of paths) {
-        offsets[sofar] = p;
-        sofar += fs.statSync(p).size;
+    for (const b of buffers) {
+        offsets[sofar] = b;
+        sofar += b.length;
     }
     return offsets;
 }

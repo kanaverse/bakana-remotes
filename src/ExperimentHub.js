@@ -1,24 +1,14 @@
 import * as scran from "scran.js";
+import * as bioc from "bioconductor";
 import * as bakana from "bakana";
 import * as utils from "./utils.js";
-import * as abs from "./abstract/AbstractFile.js";
 
 const baseUrl = "https://experimenthub.bioconductor.org/fetch";
 
+// If 'coldata' is not present, we expect an 'ncol' integer.
 const registry = {
     "zeisel-brain": { "counts": "2596", "coldata": "2598", "rowdata": "2597" } // corresponding to EH2580, 2582 and 2581, for whatever reason.
 };
-
-export function availableDatasets() {
-    return Object.keys(registry);
-}
-
-export function abbreviate(args) {
-    return {
-        "format": "ExperimentHub", 
-        "id": args.id
-    };
-}
 
 function check_class(handle, accepted, base) {
     if (!(handle instanceof scran.RdsS4Object)) {
@@ -79,7 +69,9 @@ function load_data_frame(handle) {
             try {
                 curhandle = lhandle.load(i);
                 if (curhandle instanceof scran.RdsVector && !(curhandle instanceof scran.RdsGenericVector)) {
-                    columns[colnames[i]] = curhandle.values();
+                    let curcol = curhandle.values();
+                    columns[colnames[i]] = curcol;
+                    output.nrow = curcol.length;
                 }
             } finally {
                 scran.free(curhandle);
@@ -98,6 +90,7 @@ function load_data_frame(handle) {
         rnhandle = handle.attribute("rownames");
         if (rnhandle instanceof scran.RdsStringVector) {
             output.row_names = rnhandle.values();
+            output.nrow = output.row_names.length;
         }
     } catch(e) {
         throw new Error("failed to retrieve row names from DataFrame; " + e.message);
@@ -105,128 +98,219 @@ function load_data_frame(handle) {
         scran.free(rnhandle);
     }
 
+    // Loading the number of rows.
+    if (!("nrow" in output)) {
+        let nrhandle;
+        try {
+            nrhandle = handle.attribute("nrows");
+            if (!(nrhandle instanceof scran.RdsIntegerVector)) {
+                throw new Error("expected an integer vector as the 'nrows' slot");
+            }
+            let NR = nrhandle.values();
+            if (NR.length != 1) {
+                throw new Error("expected an integer vector of length 1 as the 'nrows' slot");
+            }
+            output.nrow = NR[0];
+        } catch (e) {
+            throw new Error("failed to retrieve nrows from DataFrame; " + e.message);
+        } finally {
+            scran.free(nrhandle);
+        }
+    }
+
     return output;
 }
 
-function extract_features(handle) {
-    let rowdata = load_data_frame(handle);
-    let names = rowdata.row_names;
-    if (!names) {
-        throw new Error("no row names found in the rowData dataframe");
-    }
-
-    let output = { id: names };
-    for (const [k, v] of Object.entries(rowdata.columns)) {
-        if (k.match(/^sym/)) {
-            output[k] = v;
-        }
-    }
-
-    return output;
-}
-
-export async function preflight(args) {
-    let id = args.id;
-    if (!(id in registry)) {
-        throw new Error("unrecognized identifier '" + id + "' for ExperimentHub-based datasets");
-    }
-    let details = registry[id];
-
-    let output_anno = {};
-    {
-        let coldata_deets = await utils.downloadFun(baseUrl + "/" + details.coldata);
-        let coldata_load;
-        let coldata_handle; 
-        let cd_df;
-        try {
-            coldata_load = scran.readRds(new Uint8Array(coldata_deets));
-            coldata_handle = coldata_load.value();
-            cd_df = load_data_frame(coldata_handle);
-        } finally {
-            scran.free(coldata_handle);
-            scran.free(coldata_load);
-        }
-        for (const [k, v] of Object.entries(cd_df.columns)) {
-            output_anno[k] = bakana.summarizeArray(v);
-        }
-    }
-
-    let output_feat = {};
-    {
-        let rowdata_deets = await utils.downloadFun(baseUrl + "/" + details.rowdata);
-        let rowdata_load;
-        let rowdata_handle;
-        try {
-            rowdata_load = scran.readRds(new Uint8Array(rowdata_deets));
-            rowdata_handle = rowdata_load.value();
-            output_feat.RNA = extract_features(rowdata_handle);
-        } finally {
-            scran.free(rowdata_handle);
-            scran.free(rowdata_load);
-        }
-    }
-
-    return { annotations: output_anno, genes: output_feat };
-}
-
-export class Reader {
+/**
+ * Dataset derived from a SummarizedExperiment-like representation on Bioconductor's [ExperimentHub](https://bioconductor.org/packages/ExperimentHub).
+ */
+export class ExperimentHubDataset {
     #id;
 
-    get id() {
-        return this.#id;
+    #rowdata;
+    #coldata;
+
+    /**
+     * @return {Array} Array of strings containing identifiers of available datasets.
+     * @static
+     */
+    static availableDatasets() {
+        return Object.keys(registry);
     }
 
-    constructor(args, formatted = false) {
-        this.#id = args.id;
+    /**
+     * @param {string} id - Identifier of a dataset to load.
+     * This should be a string in {@linkcode ExperimentHubDataset.availableDatasets availableDatasets}.
+     */
+    constructor(id) {
+        this.#id = id;
         if (!(this.#id in registry)) {
             throw new Error("unrecognized identifier '" + this.#id + "' for ExperimentHub-based datasets");
         }
+        this.clear();
     }
 
-    async load() {
-        let details = registry[this.#id];
-        let output = {};
+    /**
+     * Destroy caches if present, releasing the associated memory.
+     * This may be called at any time but only has an effect if `cache = true` in {@linkcode ExperimentHubDataset#load load} or {@linkcodeExperimentHubDataset#annotations annotations}. 
+     */
+    clear() {
+        this.#rowdata = null;
+        this.#coldata = null;
+    }
 
-        let coldata_deets = await utils.downloadFun(baseUrl + "/" + details.coldata);
-        let coldata_load;
-        let coldata_handle;
-        try {
-            coldata_load = scran.readRds(new Uint8Array(coldata_deets));
-            coldata_handle = coldata_load.value();
-            output.annotations = load_data_frame(coldata_handle).columns;
-        } finally {
-            scran.free(coldata_handle);
-            scran.free(coldata_load);
+    /**
+     * @return {object} Object containing the abbreviated details of this dataset.
+     */
+    abbreviate() {
+        return { "id": this.#id };
+    }
+
+    /**
+     * @return {string} Format of this dataset class.
+     * @static
+     */
+    static format() {
+        return "ExperimentHub";
+    }
+
+    async #features() {
+        if (this.#rowdata !== null) {
+            return;
         }
 
+        let details = registry[this.#id];
         let rowdata_deets = await utils.downloadFun(baseUrl + "/" + details.rowdata);
+
         let rowdata_load;
         let rowdata_handle;
         try {
-            rowdata_load = scran.readRds(new Uint8Array(rowdata_deets));
+            rowdata_load = scran.readRds(rowdata_deets);
             rowdata_handle = rowdata_load.value();
-            output.genes = { RNA: extract_features(rowdata_handle) };
+            let rowdata = load_data_frame(rowdata_handle);
+            let names = rowdata.row_names;
+            if (!names) {
+                throw new Error("no row names found in the rowData dataframe");
+            }
+
+            let output = { id: names };
+            for (const [k, v] of Object.entries(rowdata.columns)) {
+                if (k.match(/^sym/)) {
+                    output[k] = v;
+                }
+            }
+
+            this.#rowdata = new bioc.DataFrame(output);
         } finally {
             scran.free(rowdata_handle);
             scran.free(rowdata_load);
         }
+    }
 
+    async #cells() {
+        if (this.#coldata !== null) {
+            return;
+        }
+
+        let details = registry[this.#id];
+        if ("coldata" in details) {
+            let coldata_deets = await utils.downloadFun(baseUrl + "/" + details.coldata);
+
+            let coldata_load;
+            let coldata_handle; 
+            let cd_df;
+            try {
+                coldata_load = scran.readRds(coldata_deets);
+                coldata_handle = coldata_load.value();
+                cd_df = load_data_frame(coldata_handle);
+            } finally {
+                scran.free(coldata_handle);
+                scran.free(coldata_load);
+            }
+
+            this.#coldata = new bioc.DataFrame(cd_df.columns, { numberOfRows: cd_df.nrow });
+        } else {
+            this.#coldata = new bioc.DataFrame({}, { numberOfRows: details.ncol });
+        }
+
+        return;
+    }
+
+    /**
+     * @param {object} [options={}] - Optional parameters.
+     * @param {boolean} [options.cache=false] - Whether to cache the results for re-use in subsequent calls to this method or {@linkcode ExperimentHubDataset#load load}.
+     * If `true`, users should consider calling {@linkcode ExperimentHubDataset#clear clear} to release the memory once this dataset instance is no longer needed.
+     * 
+     * @return {object} Object containing the per-feature and per-cell annotations.
+     * This has the following properties:
+     *
+     * - `features`: an object where each key is a modality name and each value is a {@linkplain external:DataFrame DataFrame} of per-feature annotations for that modality.
+     * - `cells`: an object containing:
+     *   - `number`: the number of cells in this dataset.
+     *   - `summary`: an object where each key is the name of a per-cell annotation field and its value is a summary of that annotation field,
+     *     following the same structure as returned by [`summarizeArray`](https://ltla.github.io/bakana/global.html#summarizeArray).
+     */
+    async annotations({ cache = false } = {}) {
+        await this.#features();
+        await this.#cells();
+
+        let summary = {};
+        for (const k of this.#coldata.columnNames()) {
+            let v = this.#coldata.column(k);
+            summary[k] = bakana.summarizeArray(v);
+        }
+
+        let my_rd = utils.cloneCached(this.#rowdata, cache);
+        let output = { 
+            features: utils.createSoloDefaultModality(my_rd),
+            cells: {
+                number: this.#coldata.numberOfRows(),
+                summary: summary
+            }
+        };
+
+        if (!cache) {
+            this.clear();
+        }
+        return output;
+    }
+
+    /**
+     * @param {object} [options={}] - Optional parameters.
+     * @param {boolean} [options.cache=false] - Whether to cache the results for re-use in subsequent calls to this method or {@linkcode ExperimentHubDataset#annotations annotations}.
+     * If `true`, users should consider calling {@linkcode ExperimentHubDataset#clear clear} to release the memory once this dataset instance is no longer needed.
+     *
+     * @return {object} Object containing the per-feature and per-cell annotations.
+     * This has the following properties:
+     *
+     * - `features`: an object where each key is a modality name and each value is a {@linkplain external:DataFrame DataFrame} of per-feature annotations for that modality.
+     * - `cells`: a {@linkplain external:DataFrame DataFrame} containing per-cell annotations.
+     * - `matrix`: a {@linkplain external:MultiMatrix MultiMatrix} containing one {@linkplain external:ScranMatrix ScranMatrix} per modality.
+     * - `row_ids`: an object where each key is a modality name and each value is an integer array containing the feature identifiers for each row in that modality.
+     */
+    async load({ cache = false } = {}) {
+        await this.#features();
+        await this.#cells();
+
+        let output = {
+            cells: utils.cloneCached(this.#coldata, cache)
+        };
+
+        let details = registry[this.#id];
         let counts_deets = await utils.downloadFun(baseUrl + "/" + details.counts);
         let counts_load;
         let counts_handle;
         try {
             output.matrix = new scran.MultiMatrix;
-            let counts_load = scran.readRds(new Uint8Array(counts_deets));
+            let counts_load = scran.readRds(counts_deets);
             let counts_handle = counts_load.value();
             let counts = scran.initializeSparseMatrixFromRds(counts_handle, { consume: true });
 
-            output.matrix.add("RNA", counts.matrix);
-            if (counts.row_ids) {
-                output.row_ids = { RNA: counts.row_ids };
-                for (const [k, v] of Object.entries(output.genes.RNA)) {
-                    output.genes.RNA[k] = scran.quickSliceArray(counts.row_ids, v);
-                }
-            }
+            output.matrix.add(utils.defaultModality, counts.matrix);
+            output.row_ids = utils.createSoloDefaultModality(counts.row_ids);
+
+            let perm_features = bioc.SLICE(this.#rowdata, counts.row_ids);
+            output.features = utils.createSoloDefaultModality(perm_features);
         } catch (e) {
             scran.free(counts_handle);
             scran.free(counts_load);
@@ -234,44 +318,48 @@ export class Reader {
             throw e;
         }
 
+        if (!cache) {
+            this.clear();
+        }
         return output;
     }
 
-    format() {
-        return "ExperimentHub";
-    }
+    /**
+     * @return {Array} Array of objects representing the files used in this dataset.
+     * Each object corresponds to a single file and contains:
+     * - `type`: a string denoting the type.
+     * - `file`: a {@linkplain external:SimpleFile SimpleFile} object representing the file contents.
+     */
+    serialize() {
+        const enc = new TextEncoder;
+        let buffer = enc.encode(this.#id);
 
-    async serialize(embeddedSaver) {
+        // Storing it as a string in the buffer.
         let output = {
             type: "id",
-            name: "id"
+            file: new bakana.SimpleFile(buffer, { name: "id" })
         };
-
-        if (embeddedSaver == null) {
-            output.id = this.#id;
-        } else {
-            const enc = new TextEncoder;
-            let buffer = enc.encode(this.#id);
-            let eout = embeddedSaver(abs.dumpToTemporary(buffer), buffer.length);
-            output.offset = eout.offset;
-            output.size = eout.size;
-        }
 
         return [ output ];
     }
-}
 
-export async function unserialize(values, embeddedLoader) {
-    let args = {};
+    /**
+     * @param {Array} files - Array of objects like that produced by {@linkcode ExperimentHubDataset#serialize serialize}.
+     * @return {ExperimentHubDataset} A new instance of this class.
+     * @static
+     */
+    static unserialize(files) {
+        let args = {};
 
-    // This should contain 'id'.
-    for (const x of values) {
-        let id2 = await embeddedLoader(x.offset, x.size);
-        let f = new abs.AbstractFile(id2);
-        let contents = f.buffer();
-        const dec = new TextDecoder;
-        args[x.type] = dec.decode(new Uint8Array(contents));
+        // This should contain 'id'.
+        for (const x of files) {
+            const dec = new TextDecoder;
+            args[x.type] = dec.decode(x.file.buffer());
+        }
+
+        if (!("id" in args)) {
+            throw new Error("expected a file of type 'id' when unserializing ExperimentHub dataset"); 
+        }
+        return new ExperimentHubDataset(args.id);
     }
-
-    return new Reader(args);
 }

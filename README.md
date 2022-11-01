@@ -17,22 +17,20 @@ In the future, we aim to support:
 Usage is as simple as:
 
 ```js
-import * as ehub from "bakana-remotes/ExperimentHub";
+import * as remotes from "bakana-remotes";
 import * as bakana from "bakana";
 
-// Add all desired readers.
-bakana.availableReaders["ExperimentHub"] = ehub;
+// Add desired readers for unserialization.
+bakana.availableReaders["EperimentHub"] = remotes.ExperimentHub;
 ```
 
-For ExperimentHub-sourced datasets, we can pass the following object as an entry of `matrices` in [`bakana.runAnalysis()`](https://ltla.github.io/bakana/global.html#runAnalysis).
+For ExperimentHub-sourced datasets, we can construct the following object:
 
 ```js
-{
-    "type": "ExperimentHub",
-    "id": "zeisel-brain" // or any other ID.
-}
+let ehub = new remotes.ExperimentHub("zeisel-brain");
 ```
 
+This can then be used in an entry of `datasets` in [`bakana.runAnalysis()`](https://ltla.github.io/bakana/global.html#runAnalysis).
 The supported set of IDs is listed in `ehub.availableDatasets()`... which is currently not a lot right now.
 
 ## Links
