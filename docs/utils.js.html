@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>utils.js - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    <input type="text" id="nav-search" placeholder="Search" />
+    
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.com/LTLA/bakana" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Classes</h3><ul><li><a href="ExperimentHubDataset.html">ExperimentHubDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.availableDatasets">availableDatasets</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#annotations">annotations</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#clear">clear</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#serialize">serialize</a></li></ul></li></ul><h3>Externals</h3><ul><li><a href="external-DataFrame.html">external:DataFrame</a></li><li><a href="external-MultiMatrix.html">external:MultiMatrix</a></li><li><a href="external-ScranMatrix.html">external:ScranMatrix</a></li><li><a href="external-SimpleFile.html">external:SimpleFile</a></li></ul><h3>Global</h3><ul><li><a href="global.html#setDownloadFun">setDownloadFun</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">utils.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>export var downloadFun = async url => {
+    let resp = await fetch(url);
+    if (!resp.ok) {
+        throw new Error("failed to fetch content at " + url + "(" + resp.status + ")");
+    }
+    return await resp.arrayBuffer();
+};
+
+/**
+ * Specify a function to download references for the cell labelling step.
+ *
+ * @param {function} fun - Function that accepts a single string containing a URL,
+ * and returns an ArrayBuffer of that URL's contents.
+ *
+ * @return `fun` is set as the global downloader for this step.
+ * The _previous_ value of the downloader is returned.
+ */
+export function setDownloadFun(fun) {
+    let previous = downloadFun;
+    downloadFun = fun;
+    return previous;
+}
+
+export const defaultModality = "";
+
+export function createSoloDefaultModality(value) {
+    let output = {};
+    output[defaultModality] = value;
+    return output;
+}
+
+export function cloneCached(x, cached) {
+    return (cached ? bioc.CLONE(x) : x);
+}
+
+/**
+ * A representation of a matrix of expression values, where the values are hosted on the Wasm heap for easier compute via [**scran.js**](https://github.com/jkanche/scran.js).
+ * See [here](https://jkanche.github.io/scran.js/ScranMatrix.html) for more details.
+ *
+ * @external ScranMatrix
+ */ 
+
+/**
+ * A representation of multiple {@linkplain external:ScranMatrix ScranMatrix} objects, where each object contains data for the same cells but across a different feature space, e.g., for different data modalities.
+ * See [here](https://jkanche.github.io/scran.js/MultiMatrix.html) for more details.
+ *
+ * @external MultiMatrix
+ */ 
+
+
+/**
+ * A DataFrame from the [**bioconductor**](https://github.com/LTLA/bioconductor.js) package, where each column is represented by some arbitrary vector-like object.
+ * See [here](https://ltla.github.io/bioconductor.js/DataFrame.html) for more details.
+ *
+ * @external DataFrame
+ */ 
+
+/**
+ * Representation of a file that is agnostic to the environment (Node.js or browser) or the nature of the contents (buffer or file path).
+ * See [here](https://ltla.github.io/bakana/SimpleFile.html) for more details.
+ *
+ * @external SimpleFile
+ */ 
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Tue Nov 01 2022 22:58:45 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+<script src="scripts/search.js" defer></script>
+
+
+<script src="scripts/collapse.js" defer></script>
+
+
+</body>
+</html>
