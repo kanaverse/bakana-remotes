@@ -51,9 +51,13 @@ import * as utils from "./utils.js";
 
 const baseUrl = "https://experimenthub.bioconductor.org/fetch";
 
-// If 'coldata' is not present, we expect an 'ncol' integer.
 const registry = {
-    "zeisel-brain": { "counts": "2596", "coldata": "2598", "rowdata": "2597" } // corresponding to EH2580, 2582 and 2581, for whatever reason.
+    "zeisel-brain": { "counts": "2596", "coldata": "2598", "rowdata": "2597" }, // corresponding to EH2580, 2582 and 2581, for whatever reason.
+    "segerstolpe-pancreas": { "counts": "2591", "coldata": "2593", "rowdata": "2592" }, // corresponding to EH2575, 2577 and 2576.
+    "nestorowa-hsc": { "counts": "2710", "ncol": 1920 }, // corresponding to EH2694; the coldata doesn't contain much that's useful here.
+    "aztekin-tail": { "counts": "3124", "coldata": "3125" }, // corresponding to EH3108 and 3109.
+    "wu-kidney": { "counts": "3594", "coldata": "3595" }, // corresponding to EH3558 and 3559.
+    "zilionis-mouse-lung": { "counts": "3478", "coldata": "3479" } // corresponding to EH3462 and 3463.
 };
 
 function check_class(handle, accepted, base) {
@@ -92,51 +96,67 @@ function load_listData_names(lhandle) {
     return names;
 }
 
+function populate_list_columns(lhandle, output) {
+    let colnames = load_listData_names(lhandle);
+    if (colnames == null) {
+        throw new Error("expected the listData list to be named");
+    }
+    let columns = {};
+
+    for (var i = 0; i &lt; lhandle.length(); i++) {
+        let curhandle;
+        try {
+            curhandle = lhandle.load(i);
+            if (curhandle instanceof scran.RdsVector &amp;&amp; !(curhandle instanceof scran.RdsGenericVector)) {
+                let curcol = curhandle.values();
+                columns[colnames[i]] = curcol;
+                output.nrow = curcol.length;
+            }
+        } finally {
+            scran.free(curhandle);
+        }
+    }
+
+    output.columns = columns;
+    return;
+}
+
 function load_data_frame(handle) {
-    check_class(handle, { "DFrame": "S4Vectors", "DataFrame": "S4Vectors" }, "DFrame");
     let output = {};
 
-    // Loading the atomic columns.
-    let columns = {};
-    let lhandle;
-    try {
-        lhandle = handle.attribute("listData");
-        if (!(lhandle instanceof scran.RdsGenericVector)) {
-            throw new Error("listData slot should be a generic list");
-        }
+    if (handle.type() == "S4") {
+        check_class(handle, { "DFrame": "S4Vectors", "DataFrame": "S4Vectors" }, "DFrame");
 
-        let colnames = load_listData_names(lhandle);
-        if (colnames == null) {
-            throw new Error("expected the listData list to be named");
-        }
-
-        for (var i = 0; i &lt; lhandle.length(); i++) {
-            let curhandle;
-            try {
-                curhandle = lhandle.load(i);
-                if (curhandle instanceof scran.RdsVector &amp;&amp; !(curhandle instanceof scran.RdsGenericVector)) {
-                    let curcol = curhandle.values();
-                    columns[colnames[i]] = curcol;
-                    output.nrow = curcol.length;
-                }
-            } finally {
-                scran.free(curhandle);
+        // Loading the atomic columns.
+        let lhandle;
+        try {
+            lhandle = handle.attribute("listData");
+            if (!(lhandle instanceof scran.RdsGenericVector)) {
+                throw new Error("listData slot should be a generic list");
             }
+            populate_list_columns(lhandle, output);
+        } catch(e) {
+            throw new Error("failed to retrieve data from DataFrame's listData; " + e.message);
+        } finally {
+            scran.free(lhandle);
         }
-    } catch(e) {
-        throw new Error("failed to retrieve data from DataFrame's listData; " + e.message);
-    } finally {
-        scran.free(lhandle);
+    } else {
+        if (handle.type() != "vector") {
+            throw new Error("expected a data.frame or DataFrame instance");
+        }
+        populate_list_columns(handle, output);
     }
-    output.columns = columns;
 
     // Loading the row names.
     let rnhandle;
     try {
-        rnhandle = handle.attribute("rownames");
-        if (rnhandle instanceof scran.RdsStringVector) {
-            output.row_names = rnhandle.values();
-            output.nrow = output.row_names.length;
+        let rndx = handle.findAttribute("rownames");
+        if (rndx >= 0) {
+            rnhandle = handle.attribute(rndx);
+            if (rnhandle instanceof scran.RdsStringVector) {
+                output.row_names = rnhandle.values();
+                output.nrow = output.row_names.length;
+            }
         }
     } catch(e) {
         throw new Error("failed to retrieve row names from DataFrame; " + e.message);
@@ -167,6 +187,44 @@ function load_data_frame(handle) {
     return output;
 }
 
+function extract_matrix_rownames(handle) {
+    let idx;
+
+    if (handle.type() == "S4") {
+        check_class(handle, { "dgCMatrix": "Matrix", "dgTMatrix": "Matrix" }, "Matrix");
+        idx = handle.findAttribute("Dimnames");
+    } else {
+        idx = handle.findAttribute("dimnames");
+    }
+
+    if (idx &lt; 0) {
+        throw new Error("count matrix does not have dimnames");
+    }
+
+    let dimhandle;
+    let firsthandle;
+    let output;
+    
+    try {
+        dimhandle = handle.attribute(idx);
+        if (dimhandle.type() != "vector" &amp;&amp; dimhandle.size() != 2) {
+            throw new Error("dimnames of the count matrix should be a list of length 2");
+        }
+
+        firsthandle = dimhandle.load(0);
+        if (firsthandle.type() != "string") {
+            throw new Error("expected a character vector in the first dimnames");
+        }
+
+        output = firsthandle.values();
+    } finally {
+        scran.free(dimhandle);
+        scran.free(firsthandle);
+    }
+
+    return output;
+}
+
 /**
  * Dataset derived from a SummarizedExperiment-like representation on Bioconductor's [ExperimentHub](https://bioconductor.org/packages/ExperimentHub).
  */
@@ -175,6 +233,9 @@ export class ExperimentHubDataset {
 
     #rowdata;
     #coldata;
+
+    #counts_handle;
+    #counts_loaded;
 
     /**
      * @return {Array} Array of strings containing identifiers of available datasets.
@@ -201,6 +262,10 @@ export class ExperimentHubDataset {
      * This may be called at any time but only has an effect if `cache = true` in {@linkcode ExperimentHubDataset#load load} or {@linkcodeExperimentHubDataset#annotations annotations}. 
      */
     clear() {
+        scran.free(this.#counts_handle);
+        scran.free(this.#counts_loaded);
+        this.#counts_handle = null;
+        this.#counts_loaded = null;
         this.#rowdata = null;
         this.#coldata = null;
     }
@@ -220,37 +285,67 @@ export class ExperimentHubDataset {
         return "ExperimentHub";
     }
 
+    async #counts() {
+        if (this.#counts_handle !== null) {
+            return;
+        }
+
+        let details = registry[this.#id];
+        let counts_deets = await utils.downloadFun(baseUrl + "/" + details.counts);
+        try {
+            this.#counts_loaded = scran.readRds(counts_deets);
+            this.#counts_handle = this.#counts_loaded.value();
+        } catch(e) {
+            scran.free(this.#counts_handle);
+            scran.free(this.#counts_loaded);
+            throw e;
+        }
+    }
+
     async #features() {
         if (this.#rowdata !== null) {
             return;
         }
 
         let details = registry[this.#id];
-        let rowdata_deets = await utils.downloadFun(baseUrl + "/" + details.rowdata);
 
-        let rowdata_load;
-        let rowdata_handle;
-        try {
-            rowdata_load = scran.readRds(rowdata_deets);
-            rowdata_handle = rowdata_load.value();
-            let rowdata = load_data_frame(rowdata_handle);
-            let names = rowdata.row_names;
-            if (!names) {
-                throw new Error("no row names found in the rowData dataframe");
-            }
+        if ("rowdata" in details) {
+            let rowdata_deets = await utils.downloadFun(baseUrl + "/" + details.rowdata);
 
-            let output = { id: names };
-            for (const [k, v] of Object.entries(rowdata.columns)) {
-                if (k.match(/^sym/)) {
-                    output[k] = v;
+            let rowdata_load;
+            let rowdata_handle;
+            try {
+                rowdata_load = scran.readRds(rowdata_deets);
+                rowdata_handle = rowdata_load.value();
+                let rowdata = load_data_frame(rowdata_handle);
+                let names = rowdata.row_names;
+
+                let output = {};
+                if (names) {
+                    output.id = names;
                 }
-            }
 
-            this.#rowdata = new bioc.DataFrame(output);
-        } finally {
-            scran.free(rowdata_handle);
-            scran.free(rowdata_load);
+                for (const [k, v] of Object.entries(rowdata.columns)) {
+                    if (k.match(/^sym/)) {
+                        output[k] = v;
+                    }
+                }
+
+                if (Object.keys(output).length == 0) {
+                    throw new Error("no acceptable feature identifiers found in the rowData DataFrame");
+                }
+                this.#rowdata = new bioc.DataFrame(output);
+            } finally {
+                scran.free(rowdata_handle);
+                scran.free(rowdata_load);
+            }
+            return;
         }
+
+        // Otherwise we pull the details from the counts.
+        await this.#counts();
+        let ids = extract_matrix_rownames(this.#counts_handle);
+        this.#rowdata = new bioc.DataFrame({ id: ids });
     }
 
     async #cells() {
@@ -337,20 +432,16 @@ export class ExperimentHubDataset {
     async load({ cache = false } = {}) {
         await this.#features();
         await this.#cells();
+        await this.#counts();
 
         let output = {
             cells: utils.cloneCached(this.#coldata, cache)
         };
 
         let details = registry[this.#id];
-        let counts_deets = await utils.downloadFun(baseUrl + "/" + details.counts);
-        let counts_load;
-        let counts_handle;
         try {
             output.matrix = new scran.MultiMatrix;
-            let counts_load = scran.readRds(counts_deets);
-            let counts_handle = counts_load.value();
-            let counts = scran.initializeSparseMatrixFromRds(counts_handle, { consume: true });
+            let counts = scran.initializeSparseMatrixFromRds(this.#counts_handle, { consume: !cache });
 
             output.matrix.add(utils.defaultModality, counts.matrix);
             output.row_ids = utils.createSoloDefaultModality(counts.row_ids);
@@ -358,8 +449,6 @@ export class ExperimentHubDataset {
             let perm_features = bioc.SLICE(this.#rowdata, counts.row_ids);
             output.features = utils.createSoloDefaultModality(perm_features);
         } catch (e) {
-            scran.free(counts_handle);
-            scran.free(counts_load);
             scran.free(output.matrix);
             throw e;
         }
@@ -423,7 +512,7 @@ export class ExperimentHubDataset {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Tue Nov 01 2022 23:17:25 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Wed Nov 02 2022 06:57:33 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
