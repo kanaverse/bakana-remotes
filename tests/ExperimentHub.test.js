@@ -76,3 +76,69 @@ test("ExperimentHub works as part of the wider bakana analysis", async () => {
     await bakana.freeAnalysis(state);
     await bakana.freeAnalysis(reloaded);
 })
+
+test("loading of the Segertolpe dataset works as expected", async () => {
+    let test = new remotes.ExperimentHubDataset("segerstolpe-pancreas");
+    let loaded = await test.load();
+
+    expect(loaded.matrix.get("").numberOfRows()).toEqual(loaded.features[""].numberOfRows());
+    expect(loaded.matrix.get("").numberOfRows()).toBeGreaterThan(0);
+
+    expect(loaded.matrix.get("").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
+    expect(loaded.matrix.get("").numberOfColumns()).toBeGreaterThan(0);
+
+    scran.free(test.matrix);
+})
+
+test("loading of the Nestorowa dataset works as expected", async () => {
+    let test = new remotes.ExperimentHubDataset("nestorowa-hsc");
+    let loaded = await test.load();
+
+    expect(loaded.matrix.get("").numberOfRows()).toEqual(loaded.features[""].numberOfRows());
+    expect(loaded.matrix.get("").numberOfRows()).toBeGreaterThan(0);
+
+    expect(loaded.matrix.get("").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
+    expect(loaded.matrix.get("").numberOfColumns()).toBeGreaterThan(0);
+
+    scran.free(test.matrix);
+})
+
+test("loading of the Aztekin dataset works as expected", async () => {
+    let test = new remotes.ExperimentHubDataset("aztekin-tail");
+    let loaded = await test.load();
+
+    expect(loaded.matrix.get("").numberOfRows()).toEqual(loaded.features[""].numberOfRows());
+    expect(loaded.matrix.get("").numberOfRows()).toBeGreaterThan(0);
+
+    expect(loaded.matrix.get("").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
+    expect(loaded.matrix.get("").numberOfColumns()).toBeGreaterThan(0);
+
+    scran.free(test.matrix);
+})
+
+test("loading of the Wu dataset works as expected", async () => {
+    let test = new remotes.ExperimentHubDataset("wu-kidney");
+    let loaded = await test.load();
+
+    expect(loaded.matrix.get("").numberOfRows()).toEqual(loaded.features[""].numberOfRows());
+    expect(loaded.matrix.get("").numberOfRows()).toBeGreaterThan(0);
+
+    expect(loaded.matrix.get("").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
+    expect(loaded.matrix.get("").numberOfColumns()).toBeGreaterThan(0);
+
+    scran.free(test.matrix);
+})
+
+test("loading of the Zilionis dataset works as expected", async () => {
+    let test = new remotes.ExperimentHubDataset("zilionis-mouse-lung");
+    let loaded = await test.load();
+
+    expect(loaded.matrix.get("").numberOfRows()).toEqual(loaded.features[""].numberOfRows());
+    expect(loaded.matrix.get("").numberOfRows()).toBeGreaterThan(0);
+
+    expect(loaded.matrix.get("").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
+    expect(loaded.matrix.get("").numberOfColumns()).toBeGreaterThan(0);
+
+    scran.free(test.matrix);
+})
+

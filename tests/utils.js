@@ -21,8 +21,8 @@ async function downloader(url) {
             throw new Error("failed to fetch resource at '" + url + "' (" + String(res.status) + ")");
         }
 
-        let contents = await res.arrayBuffer();
-        fs.writeFileSync(path, new Uint8Array(contents));
+        let contents = new Uint8Array(await res.arrayBuffer());
+        fs.writeFileSync(path, contents);
         return contents;
     }
 
