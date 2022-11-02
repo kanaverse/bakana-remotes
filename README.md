@@ -21,19 +21,19 @@ import * as remotes from "bakana-remotes";
 import * as bakana from "bakana";
 
 // Add desired readers for unserialization.
-bakana.availableReaders["EperimentHub"] = remotes.ExperimentHub;
+bakana.availableReaders["EperimentHub"] = remotes.ExperimentHubDataset;
 ```
 
 For ExperimentHub-sourced datasets, we can construct the following object:
 
 ```js
-let ehub = new remotes.ExperimentHub("zeisel-brain");
+let ehub = new remotes.ExperimentHubDataset("zeisel-brain");
 ```
 
 This can then be used in an entry of `datasets` in [`bakana.runAnalysis()`](https://ltla.github.io/bakana/global.html#runAnalysis).
-The supported set of IDs is listed in `ehub.availableDatasets()`... which is currently not a lot right now.
+The supported set of IDs is listed in `ExperimentHubDataset.availableDatasets()`... which is currently not a lot right now.
 
 ## Links
 
-See the [**bakana**](https://github.com/LTLA/bakana) documentation for more details on how to create a custom reader.
+See the [**bakana**](https://github.com/LTLA/bakana) documentation for more details on how to create a [custom `Dataset` reader](https://github.com/LTLA/bakana/blob/master/docs/related/custom_readers.md).
 Implementations of readers for other databases are welcome.
