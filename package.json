@@ -34,6 +34,6 @@
     "isomorphic-fetch": "^3.0.0",
     "jest": "^27.5.1",
     "jsdoc": "^3.6.10",
-    "valkana": "^0.0.4"
+    "valkana": "^1.0.0-alpha.3"
   }
 }

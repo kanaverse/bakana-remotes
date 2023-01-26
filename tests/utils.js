@@ -38,7 +38,7 @@ export function baseParams() {
     let output = bakana.analysisDefaults();
 
     // Cut down on the work.
-    output.pca.num_pcs = 10;
+    output.rna_pca.num_pcs = 10;
 
     // Avoid getting held up by pointless iterations.
     output.tsne.iterations = 10;
