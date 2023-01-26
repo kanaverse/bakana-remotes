@@ -63,7 +63,6 @@ export async function loadDataFrame(baseUrl, id, { getFun = null, downloadFun = 
         }
 
     } else if (schema.startsWith("hdf5_data_frame/") || "hdf5_data_frame" in details) {
-        let content = await download2(handle);
         let realized = scran.realizeFile(content);
         try {
             let fhandle = new scran.H5File(realized.path);
