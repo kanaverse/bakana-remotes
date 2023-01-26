@@ -11,24 +11,24 @@ let ehub = new remotes.ExperimentHubDataset("zeisel-brain");
 test("ExperimentHub abbreviation works as expected", async () => {
     let abbrev = ehub.abbreviate();
     expect(abbrev.id).toBe("zeisel-brain");
+    expect(abbrev.options.primaryRnaFeatureIdColumn).toEqual(0);
     expect(ehub.constructor.format()).toBe("ExperimentHub");
 })
 
 test("ExperimentHub preflight works as expected", async () => {
-    let pre = await ehub.annotations();
-    expect(pre.features[""].numberOfRows()).toBeGreaterThan(0);
-    expect(pre.cells.summary.level1class.type).toBe("categorical");
-    expect(pre.cells.summary.level1class.values.length).toBeGreaterThan(0);
+    let pre = await ehub.summary();
+    expect(pre.modality_features.RNA.numberOfRows()).toBeGreaterThan(0);
+    expect(pre.cells.column("level1class").length).toBeGreaterThan(0);
 })
 
 test("ExperimentHub loading works as expected", async () => {
     let details = await ehub.load();
-    expect(details.features[""].numberOfRows()).toBeGreaterThan(0);
+    expect(details.features.RNA.numberOfRows()).toBeGreaterThan(0);
     expect(details.cells.numberOfRows()).toBeGreaterThan(0);
     expect(details.cells.hasColumn("level1class")).toBe(true);
 
-    let mat = details.matrix.get("");
-    expect(mat.numberOfRows()).toEqual(details.features[""].numberOfRows());
+    let mat = details.matrix.get("RNA");
+    expect(mat.numberOfRows()).toEqual(details.features["RNA"].numberOfRows());
     expect(mat.numberOfColumns()).toEqual(details.cells.numberOfRows());
 
     scran.free(details.matrix);
