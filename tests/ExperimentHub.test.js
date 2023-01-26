@@ -11,47 +11,47 @@ let ehub = new remotes.ExperimentHubDataset("zeisel-brain");
 test("ExperimentHub abbreviation works as expected", async () => {
     let abbrev = ehub.abbreviate();
     expect(abbrev.id).toBe("zeisel-brain");
+    expect(abbrev.options.primaryRnaFeatureIdColumn).toEqual(0);
     expect(ehub.constructor.format()).toBe("ExperimentHub");
 })
 
 test("ExperimentHub preflight works as expected", async () => {
-    let pre = await ehub.annotations();
-    expect(pre.features[""].numberOfRows()).toBeGreaterThan(0);
-    expect(pre.cells.summary.level1class.type).toBe("categorical");
-    expect(pre.cells.summary.level1class.values.length).toBeGreaterThan(0);
+    let pre = await ehub.summary();
+    expect(pre.modality_features.RNA.numberOfRows()).toBeGreaterThan(0);
+    expect(pre.cells.column("level1class").length).toBeGreaterThan(0);
 })
 
 test("ExperimentHub loading works as expected", async () => {
     let details = await ehub.load();
-    expect(details.features[""].numberOfRows()).toBeGreaterThan(0);
+    expect(details.features.RNA.numberOfRows()).toBeGreaterThan(0);
     expect(details.cells.numberOfRows()).toBeGreaterThan(0);
     expect(details.cells.hasColumn("level1class")).toBe(true);
 
-    let mat = details.matrix.get("");
-    expect(mat.numberOfRows()).toEqual(details.features[""].numberOfRows());
+    let mat = details.matrix.get("RNA");
+    expect(mat.numberOfRows()).toEqual(details.features["RNA"].numberOfRows());
     expect(mat.numberOfColumns()).toEqual(details.cells.numberOfRows());
 
     scran.free(details.matrix);
 })
 
 test("ExperimentHub works as part of the wider bakana analysis", async () => {
-    let contents = {};
-    let finished = (step, res) => {
-        contents[step] = res;
-    };
-
     bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
     let files = { default: ehub };
 
     let state = await bakana.createAnalysis();
     let params = utils.baseParams();
-    let res = await bakana.runAnalysis(state, files, params, { finishFun: finished });
+    await bakana.runAnalysis(state, files, params);
 
-    expect(contents.quality_control instanceof Object).toBe(true);
-    expect(contents.pca instanceof Object).toBe(true);
-    expect(contents.feature_selection instanceof Object).toBe(true);
-    expect(contents.cell_labelling instanceof Object).toBe(true);
-    expect(contents.marker_detection instanceof Object).toBe(true);
+    let nr = state.inputs.fetchCountMatrix().get("RNA").numberOfRows();
+    expect(nr).toBeGreaterThan(0);
+    expect(state.inputs.fetchFeatureAnnotations()["RNA"].numberOfRows()).toBe(nr);
+    expect(state.inputs.fetchCellAnnotations().numberOfRows()).toBeGreaterThan(0);
+
+    expect(state.rna_quality_control.changed).toBe(true);
+    expect(state.rna_pca.changed).toBe(true);
+    expect(state.feature_selection.changed).toBe(true);
+    expect(state.cell_labelling.changed).toBe(true);
+    expect(state.marker_detection.changed).toBe(true);
 
     // Serialization works as expected.
     const path = "TEST_state_ExperimentHub.h5";
@@ -69,8 +69,8 @@ test("ExperimentHub works as part of the wider bakana analysis", async () => {
     );
 
     let new_params = bakana.retrieveParameters(reloaded);
-    expect(new_params.quality_control instanceof Object).toBe(true);
-    expect(new_params.pca instanceof Object).toBe(true);
+    expect(new_params.rna_quality_control instanceof Object).toBe(true);
+    expect(new_params.rna_pca instanceof Object).toBe(true);
 
     // Freeing.
     await bakana.freeAnalysis(state);
@@ -81,11 +81,11 @@ test("loading of the Segertolpe dataset works as expected", async () => {
     let test = new remotes.ExperimentHubDataset("segerstolpe-pancreas");
     let loaded = await test.load();
 
-    expect(loaded.matrix.get("").numberOfRows()).toEqual(loaded.features[""].numberOfRows());
-    expect(loaded.matrix.get("").numberOfRows()).toBeGreaterThan(0);
+    expect(loaded.matrix.get("RNA").numberOfRows()).toEqual(loaded.features["RNA"].numberOfRows());
+    expect(loaded.matrix.get("RNA").numberOfRows()).toBeGreaterThan(0);
 
-    expect(loaded.matrix.get("").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
-    expect(loaded.matrix.get("").numberOfColumns()).toBeGreaterThan(0);
+    expect(loaded.matrix.get("RNA").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
+    expect(loaded.matrix.get("RNA").numberOfColumns()).toBeGreaterThan(0);
 
     scran.free(test.matrix);
 })
@@ -94,11 +94,11 @@ test("loading of the Nestorowa dataset works as expected", async () => {
     let test = new remotes.ExperimentHubDataset("nestorowa-hsc");
     let loaded = await test.load();
 
-    expect(loaded.matrix.get("").numberOfRows()).toEqual(loaded.features[""].numberOfRows());
-    expect(loaded.matrix.get("").numberOfRows()).toBeGreaterThan(0);
+    expect(loaded.matrix.get("RNA").numberOfRows()).toEqual(loaded.features["RNA"].numberOfRows());
+    expect(loaded.matrix.get("RNA").numberOfRows()).toBeGreaterThan(0);
 
-    expect(loaded.matrix.get("").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
-    expect(loaded.matrix.get("").numberOfColumns()).toBeGreaterThan(0);
+    expect(loaded.matrix.get("RNA").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
+    expect(loaded.matrix.get("RNA").numberOfColumns()).toBeGreaterThan(0);
 
     scran.free(test.matrix);
 })
@@ -107,11 +107,11 @@ test("loading of the Aztekin dataset works as expected", async () => {
     let test = new remotes.ExperimentHubDataset("aztekin-tail");
     let loaded = await test.load();
 
-    expect(loaded.matrix.get("").numberOfRows()).toEqual(loaded.features[""].numberOfRows());
-    expect(loaded.matrix.get("").numberOfRows()).toBeGreaterThan(0);
+    expect(loaded.matrix.get("RNA").numberOfRows()).toEqual(loaded.features["RNA"].numberOfRows());
+    expect(loaded.matrix.get("RNA").numberOfRows()).toBeGreaterThan(0);
 
-    expect(loaded.matrix.get("").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
-    expect(loaded.matrix.get("").numberOfColumns()).toBeGreaterThan(0);
+    expect(loaded.matrix.get("RNA").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
+    expect(loaded.matrix.get("RNA").numberOfColumns()).toBeGreaterThan(0);
 
     scran.free(test.matrix);
 })
@@ -120,11 +120,11 @@ test("loading of the Wu dataset works as expected", async () => {
     let test = new remotes.ExperimentHubDataset("wu-kidney");
     let loaded = await test.load();
 
-    expect(loaded.matrix.get("").numberOfRows()).toEqual(loaded.features[""].numberOfRows());
-    expect(loaded.matrix.get("").numberOfRows()).toBeGreaterThan(0);
+    expect(loaded.matrix.get("RNA").numberOfRows()).toEqual(loaded.features["RNA"].numberOfRows());
+    expect(loaded.matrix.get("RNA").numberOfRows()).toBeGreaterThan(0);
 
-    expect(loaded.matrix.get("").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
-    expect(loaded.matrix.get("").numberOfColumns()).toBeGreaterThan(0);
+    expect(loaded.matrix.get("RNA").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
+    expect(loaded.matrix.get("RNA").numberOfColumns()).toBeGreaterThan(0);
 
     scran.free(test.matrix);
 })
@@ -133,11 +133,11 @@ test("loading of the Zilionis dataset works as expected", async () => {
     let test = new remotes.ExperimentHubDataset("zilionis-mouse-lung");
     let loaded = await test.load();
 
-    expect(loaded.matrix.get("").numberOfRows()).toEqual(loaded.features[""].numberOfRows());
-    expect(loaded.matrix.get("").numberOfRows()).toBeGreaterThan(0);
+    expect(loaded.matrix.get("RNA").numberOfRows()).toEqual(loaded.features["RNA"].numberOfRows());
+    expect(loaded.matrix.get("RNA").numberOfRows()).toBeGreaterThan(0);
 
-    expect(loaded.matrix.get("").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
-    expect(loaded.matrix.get("").numberOfColumns()).toBeGreaterThan(0);
+    expect(loaded.matrix.get("RNA").numberOfColumns()).toEqual(loaded.cells.numberOfRows());
+    expect(loaded.matrix.get("RNA").numberOfColumns()).toBeGreaterThan(0);
 
     scran.free(test.matrix);
 })

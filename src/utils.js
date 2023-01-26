@@ -23,14 +23,6 @@ export function setDownloadFun(fun) {
     return previous;
 }
 
-export const defaultModality = "";
-
-export function createSoloDefaultModality(value) {
-    let output = {};
-    output[defaultModality] = value;
-    return output;
-}
-
 export function cloneCached(x, cached) {
     return (cached ? bioc.CLONE(x) : x);
 }

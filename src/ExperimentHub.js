@@ -191,6 +191,18 @@ export class ExperimentHubDataset {
     #counts_handle;
     #counts_loaded;
 
+    // We should _know_ which experiments correspond to which modality for each
+    // dataset in our registry, so there's no need to provide options for that.
+    // However, we might not know how to choose an appropriate primary
+    // identifier for combining datasets, hence these options.
+    #primaryRnaFeatureIdColumn;
+
+    #dump_options() {
+        return {
+            primaryRnaFeatureIdColumn: this.#primaryRnaFeatureIdColumn
+        };
+    }
+
     /**
      * @return {Array} Array of strings containing identifiers of available datasets.
      * @static
@@ -202,13 +214,28 @@ export class ExperimentHubDataset {
     /**
      * @param {string} id - Identifier of a dataset to load.
      * This should be a string in {@linkcode ExperimentHubDataset.availableDatasets availableDatasets}.
+     * @param {object} [options={}] - Optional parameters.
+     * @param {string|number} [options.primaryRnaFeatureIdColumn=0] - See {@linkcode TenxHdf5Dataset#setPrimaryRnaFeatureIdColumn setPrimaryRnaFeatureIdColumn}.
      */
-    constructor(id) {
+    constructor(id, { 
+        primaryRnaFeatureIdColumn = 0
+    } = {}) {
         this.#id = id;
         if (!(this.#id in registry)) {
             throw new Error("unrecognized identifier '" + this.#id + "' for ExperimentHub-based datasets");
         }
+
+        this.#primaryRnaFeatureIdColumn = primaryRnaFeatureIdColumn;
+
         this.clear();
+    }
+
+    /**
+     * @return {string} Format of this dataset class.
+     * @static
+     */
+    static format() {
+        return "ExperimentHub";
     }
 
     /**
@@ -228,15 +255,16 @@ export class ExperimentHubDataset {
      * @return {object} Object containing the abbreviated details of this dataset.
      */
     abbreviate() {
-        return { "id": this.#id };
+        return { "id": this.#id, "options": this.#dump_options() };
     }
 
     /**
-     * @return {string} Format of this dataset class.
-     * @static
+     * @param {string|number} i - Name or index of the column of the `features` {@linkplain external:DataFrame DataFrame} that contains the primary feature identifier for gene expression.
+     * If `i` is invalid (e.g., out of range index, unavailable name), it is ignored and the primary identifier is treated as undefined.
      */
-    static format() {
-        return "ExperimentHub";
+    setPrimaryRnaFeatureIdColumn(i) {
+        this.#primaryRnaFeatureIdColumn = i;
+        return;
     }
 
     async #counts() {
@@ -339,30 +367,19 @@ export class ExperimentHubDataset {
      * @return {object} Object containing the per-feature and per-cell annotations.
      * This has the following properties:
      *
-     * - `features`: an object where each key is a modality name and each value is a {@linkplain external:DataFrame DataFrame} of per-feature annotations for that modality.
-     * - `cells`: an object containing:
-     *   - `number`: the number of cells in this dataset.
-     *   - `summary`: an object where each key is the name of a per-cell annotation field and its value is a summary of that annotation field,
-     *     following the same structure as returned by [`summarizeArray`](https://ltla.github.io/bakana/global.html#summarizeArray).
+     * - `modality_features`: an object where each key is a modality name and each value is a {@linkplain external:DataFrame DataFrame} of per-feature annotations for that modality.
+     *   Unlike {@linkcode ExperimentHubDataset#load load}, modality names are arbitrary.
+     * - `modality_assay_names`: an object where each key is a modality name and each value is an Array of assay names for that modality.
+     *   This should match the modality names in `modality_features`.
+     * - `cells`: a {@linkplain external:DataFrame DataFrame} of per-cell annotations.
      */
-    async annotations({ cache = false } = {}) {
+    async summary({ cache = false } = {}) {
         await this.#features();
         await this.#cells();
 
-        let summary = {};
-        for (const k of this.#coldata.columnNames()) {
-            let v = this.#coldata.column(k);
-            summary[k] = bakana.summarizeArray(v);
-        }
-
+        let output = { cells: utils.cloneCached(this.#coldata, cache) };
         let my_rd = utils.cloneCached(this.#rowdata, cache);
-        let output = { 
-            features: utils.createSoloDefaultModality(my_rd),
-            cells: {
-                number: this.#coldata.numberOfRows(),
-                summary: summary
-            }
-        };
+        output.modality_features = { "RNA": my_rd };
 
         if (!cache) {
             this.clear();
@@ -372,8 +389,8 @@ export class ExperimentHubDataset {
 
     /**
      * @param {object} [options={}] - Optional parameters.
-     * @param {boolean} [options.cache=false] - Whether to cache the results for re-use in subsequent calls to this method or {@linkcode ExperimentHubDataset#annotations annotations}.
-     * If `true`, users should consider calling {@linkcode ExperimentHubDataset#clear clear} to release the memory once this dataset instance is no longer needed.
+     * @param {boolean} [options.cache=false] - Whether to cache the results for re-use in subsequent calls to this method or {@linkcode TenxHdf5Dataset#summary summary}.
+     * If `true`, users should consider calling {@linkcode TenxHdf5Dataset#clear clear} to release the memory once this dataset instance is no longer needed.
      *
      * @return {object} Object containing the per-feature and per-cell annotations.
      * This has the following properties:
@@ -382,6 +399,10 @@ export class ExperimentHubDataset {
      * - `cells`: a {@linkplain external:DataFrame DataFrame} containing per-cell annotations.
      * - `matrix`: a {@linkplain external:MultiMatrix MultiMatrix} containing one {@linkplain external:ScranMatrix ScranMatrix} per modality.
      * - `row_ids`: an object where each key is a modality name and each value is an integer array containing the feature identifiers for each row in that modality.
+     *
+     * Modality names are guaranteed to be one of `"RNA"`, `"ADT"` or `"CRISPR"`.
+     * It is assumed that an appropriate mapping from the feature types inside the `featureFile` was previously declared,
+     * either in the constructor or in setters like {@linkcode setFeatureTypeRnaName}.
      */
     async load({ cache = false } = {}) {
         await this.#features();
@@ -392,19 +413,28 @@ export class ExperimentHubDataset {
             cells: utils.cloneCached(this.#coldata, cache)
         };
 
+        // Hard-coding the fact that we're dealing with RNA here, as all
+        // registry entries are currently RNA-only anyway.
         let details = registry[this.#id];
         try {
             output.matrix = new scran.MultiMatrix;
             let counts = scran.initializeSparseMatrixFromRds(this.#counts_handle, { consume: !cache });
 
-            output.matrix.add(utils.defaultModality, counts.matrix);
-            output.row_ids = utils.createSoloDefaultModality(counts.row_ids);
+            output.matrix.add("RNA", counts.matrix);
+            output.row_ids = { "RNA": counts.row_ids };
 
             let perm_features = bioc.SLICE(this.#rowdata, counts.row_ids);
-            output.features = utils.createSoloDefaultModality(perm_features);
+            output.features = { "RNA": perm_features };
         } catch (e) {
             scran.free(output.matrix);
             throw e;
+        }
+
+        // Setting the primary identifiers.
+        let curfeat = output.features["RNA"];
+        let id = this.primaryRnaFeatureIdColumn;
+        if ((typeof id == "string" && curfeat.hasColumn(id)) || (typeof id == "number" && id < curfeat.numberOfColumns())) {
+            curfeat.$setRowNames(curfeat.column(id));
         }
 
         if (!cache) {
@@ -414,10 +444,13 @@ export class ExperimentHubDataset {
     }
 
     /**
-     * @return {Array} Array of objects representing the files used in this dataset.
-     * Each object corresponds to a single file and contains:
-     * - `type`: a string denoting the type.
-     * - `file`: a {@linkplain external:SimpleFile SimpleFile} object representing the file contents.
+     * @return {object} Object describing this dataset, containing:
+     *
+     * - `files`: Array of objects representing the files used in this dataset.
+     *   Each object corresponds to a single file and contains:
+     *   - `type`: a string denoting the type.
+     *   - `file`: a {@linkplain SimpleFile} object representing the file contents.
+     * - `options`: An object containing additional options to saved.
      */
     serialize() {
         const enc = new TextEncoder;
@@ -429,15 +462,19 @@ export class ExperimentHubDataset {
             file: new bakana.SimpleFile(buffer, { name: "id" })
         };
 
-        return [ output ];
+        return {
+            files: [ output ],
+            options: this.#dump_options()
+        }
     }
 
     /**
      * @param {Array} files - Array of objects like that produced by {@linkcode ExperimentHubDataset#serialize serialize}.
+     * @param {object} options - Object containing additional options to be passed to the constructor.
      * @return {ExperimentHubDataset} A new instance of this class.
      * @static
      */
-    static unserialize(files) {
+    static unserialize(files, options) {
         let args = {};
 
         // This should contain 'id'.
@@ -449,6 +486,6 @@ export class ExperimentHubDataset {
         if (!("id" in args)) {
             throw new Error("expected a file of type 'id' when unserializing ExperimentHub dataset"); 
         }
-        return new ExperimentHubDataset(args.id);
+        return new ExperimentHubDataset(args.id, options);
     }
 }
