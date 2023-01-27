@@ -15,8 +15,8 @@ remotes.CollaboratorDBDataset.setGetFun(async url => new Response(await utils.do
 test("CollaboratorDB abbreviation works as expected", async () => {
     let abbrev = cdb.abbreviate();
     expect(abbrev.id).toBe(id);
-    expect(abbrev.options.countAssayCrisprName).toBeNull();
-    expect(abbrev.options.experimentAdtName).toBeNull();
+    expect(abbrev.options.crisprCountAssay).toEqual(0);
+    expect(abbrev.options.adtExperiment).toBe("Antibody Capture");
     expect(abbrev.options.primaryRnaFeatureIdColumn).toEqual(0);
     expect(cdb.constructor.format()).toBe("CollaboratorDB");
 })
@@ -41,6 +41,25 @@ test("CollaboratorDB loading works as expected", async () => {
     expect(mat.numberOfColumns()).toEqual(details.cells.numberOfRows());
     expect(details.row_ids.RNA.length).toEqual(mat.numberOfRows());
 
+    expect(details.features.RNA.rowNames().length).toBeGreaterThan(0); // check that the primary ID was correctly set.
+
+    // Trying again with strings everywhere.
+    let copy = new remotes.CollaboratorDBDataset(id);
+    copy.setRnaCountAssay("counts");
+    copy.setAdtExperiment("ERCC");
+    copy.setCrisprExperiment(0);
+
+    let details2 = await copy.load();
+    expect(details2.matrix.get("ADT").numberOfRows()).toBeLessThan(details2.matrix.get("RNA").numberOfRows());
+    expect(details2.matrix.get("CRISPR").numberOfRows()).toEqual(details2.matrix.get("CRISPR").numberOfRows());
+
+    // Catch some errors!
+    copy.setRnaCountAssay("FOO");
+    await expect(copy.load()).rejects.toThrow("cannot find assay")
+    copy.setRnaCountAssay(100);
+    await expect(copy.load()).rejects.toThrow("out of range")
+
+    scran.free(details2.matrix);
     scran.free(details.matrix);
 })
 
