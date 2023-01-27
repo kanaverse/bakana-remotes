@@ -54,9 +54,11 @@ export class CollaboratorDBDataset {
 
     /** 
      * @param {?function} fun - Function that accepts a URL string and downloads the resource,
-     * see [`getFileMetadata`](https://artifactdb.github.io/artifactdb.js/global.html#getFileMetadata) for details.
+     * returning a Uint8Array of the file contents.
+     * Alternatively, on Node.js, the function may return a string containing a file path to the downloaded resource.
      * 
      * Alternatively `null`, to reset the function to its default value.
+     * See [`getFile`](https://artifactdb.github.io/artifactdb.js/global.html#getFile) for details.
      * @return {?function} Previous setting of the download function.
      */
     static setDownloadFun(fun) {

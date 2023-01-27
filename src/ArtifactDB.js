@@ -27,7 +27,7 @@ function detect_csv_compression(details) {
  * @param {object} [options={}] - Optional parameters.
  * @param {?function} [options.getFun=null] - Function that accepts a URL string and performs a GET to return a Response object,
  * see [`getFileMetadata`](https://artifactdb.github.io/artifactdb.js/global.html#getFileMetadata) for details.
- * @param {?function} [options.downloadFun=null] - Function that accepts a URL string and downloads the resource, returning either a file path (string) or an ArrayBuffer containing the file contents;
+ * @param {?function} [options.downloadFun=null] - Function that accepts a URL string and downloads the resource, returning either a file path (string) or a Uint8Array containing the file contents;
  * see [`getFile`](https://artifactdb.github.io/artifactdb.js/global.html#getFile) for details.
  *
  * @return {external:DataFrame} The DataFrame, absent any "other" columns.
@@ -35,11 +35,7 @@ function detect_csv_compression(details) {
 export async function loadDataFrame(baseUrl, id, { getFun = null, downloadFun = null } = {}) {
     let details = await adb.getFileMetadata(baseUrl, id, { getFun });
     let unpacked = adb.unpackId(id);
-
     let content = await adb.getFile(baseUrl, adb.packId(unpacked.project, details.path, unpacked.version), { getFun, downloadFun });
-    if (content instanceof ArrayBuffer) {
-        content = new Uint8Array(content);
-    }
 
     let headers = [];
     let columns = [];
@@ -180,7 +176,7 @@ export async function loadDataFrame(baseUrl, id, { getFun = null, downloadFun = 
  * @param {object} [options={}] - Optional parameters.
  * @param {?function} [options.getFun=null] - Function that accepts a URL string and performs a GET to return a Response object,
  * see [`getFileMetadata`](https://artifactdb.github.io/artifactdb.js/global.html#getFileMetadata) for details.
- * @param {?function} [options.downloadFun=null] - Function that accepts a URL string and downloads the resource, returning either a file path (string) or an ArrayBuffer containing the file contents;
+ * @param {?function} [options.downloadFun=null] - Function that accepts a URL string and downloads the resource, returning either a file path (string) or a Uint8Array containing the file contents;
  * see [`getFile`](https://artifactdb.github.io/artifactdb.js/global.html#getFile) for details.
  * @param {boolean} [options.forceInteger=true] - Whether to force an integer representation for the matrix data.
  * This saves space when floating-point is unnecessary. 
@@ -194,11 +190,7 @@ export async function loadDataFrame(baseUrl, id, { getFun = null, downloadFun = 
 export async function loadScranMatrix(baseUrl, id, { getFun = null, downloadFun = null, forceInteger = true, layered = true } = {} ) {
     let details = await adb.getFileMetadata(baseUrl, id, { getFun });
     let unpacked = adb.unpackId(id);
-
     let content = await adb.getFile(baseUrl, adb.packId(unpacked.project, details.path, unpacked.version), { getFun, downloadFun });
-    if (content instanceof ArrayBuffer) {
-        content = new Uint8Array(content);
-    }
 
     let schema = details["$schema"]
     let is_dense = (schema.startsWith("hdf5_dense_array/") || "hdf5_dense_array" in details);
