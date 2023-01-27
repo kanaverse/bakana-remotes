@@ -203,6 +203,32 @@ export class ExperimentHubDataset {
         };
     }
 
+    /****************************************
+     ****************************************/
+
+    static #downloadFun = async url => {
+        let resp = await fetch(url);
+        if (!resp.ok) {
+            throw new Error("failed to fetch content at " + url + " (" + resp.status + ")");
+        }
+        return new Uint8Array(await resp.arrayBuffer());
+    }
+
+    /** 
+     * @param {function} fun - Function that accepts a URL string and downloads the resource,
+     * returning a Uint8Array of its contents.
+     * Alternatively, on Node.js, the funciton may return a string containing the path to the downloaded resource.
+     * @return {function} Previous setting of the download function.
+     */
+    static setDownloadFun(fun) {
+        let previous = ExperimentHubDataset.#downloadFun;
+        ExperimentHubDataset.#downloadFun = fun;
+        return previous;
+    }
+
+    /****************************************
+     ****************************************/
+
     /**
      * @return {Array} Array of strings containing identifiers of available datasets.
      * @static
@@ -273,7 +299,7 @@ export class ExperimentHubDataset {
         }
 
         let details = registry[this.#id];
-        let counts_deets = await utils.downloadFun(baseUrl + "/" + details.counts);
+        let counts_deets = await ExperimentHubDataset.#downloadFun(baseUrl + "/" + details.counts);
         try {
             this.#counts_loaded = scran.readRds(counts_deets);
             this.#counts_handle = this.#counts_loaded.value();
@@ -292,7 +318,7 @@ export class ExperimentHubDataset {
         let details = registry[this.#id];
 
         if ("rowdata" in details) {
-            let rowdata_deets = await utils.downloadFun(baseUrl + "/" + details.rowdata);
+            let rowdata_deets = await ExperimentHubDataset.#downloadFun(baseUrl + "/" + details.rowdata);
 
             let rowdata_load;
             let rowdata_handle;
@@ -337,7 +363,7 @@ export class ExperimentHubDataset {
 
         let details = registry[this.#id];
         if ("coldata" in details) {
-            let coldata_deets = await utils.downloadFun(baseUrl + "/" + details.coldata);
+            let coldata_deets = await ExperimentHubDataset.#downloadFun(baseUrl + "/" + details.coldata);
 
             let coldata_load;
             let coldata_handle; 
@@ -369,8 +395,6 @@ export class ExperimentHubDataset {
      *
      * - `modality_features`: an object where each key is a modality name and each value is a {@linkplain external:DataFrame DataFrame} of per-feature annotations for that modality.
      *   Unlike {@linkcode ExperimentHubDataset#load load}, modality names are arbitrary.
-     * - `modality_assay_names`: an object where each key is a modality name and each value is an Array of assay names for that modality.
-     *   This should match the modality names in `modality_features`.
      * - `cells`: a {@linkplain external:DataFrame DataFrame} of per-cell annotations.
      */
     async summary({ cache = false } = {}) {

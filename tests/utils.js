@@ -32,7 +32,6 @@ export async function downloader(url) {
 }
 
 bakana.setCellLabellingDownload(downloader);
-utils.setDownloadFun(downloader);
 
 export function baseParams() {
     let output = bakana.analysisDefaults();

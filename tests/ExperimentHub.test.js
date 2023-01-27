@@ -7,6 +7,7 @@ beforeAll(utils.initializeAll);
 afterAll(async () => await bakana.terminate());
 
 let ehub = new remotes.ExperimentHubDataset("zeisel-brain");
+remotes.ExperimentHubDataset.setDownloadFun(utils.downloader);
 
 test("ExperimentHub abbreviation works as expected", async () => {
     let abbrev = ehub.abbreviate();
