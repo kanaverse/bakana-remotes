@@ -9,7 +9,7 @@ export async function initializeAll() {
     await valkana.initialize({ localFile: true });
 }
 
-async function downloader(url) {
+export async function downloader(url) {
     if (!fs.existsSync("files")) {
         fs.mkdirSync("files");
     }
