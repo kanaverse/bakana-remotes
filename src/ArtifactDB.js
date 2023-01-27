@@ -35,7 +35,11 @@ function detect_csv_compression(details) {
 export async function loadDataFrame(baseUrl, id, { getFun = null, downloadFun = null } = {}) {
     let details = await adb.getFileMetadata(baseUrl, id, { getFun });
     let unpacked = adb.unpackId(id);
+
     let content = await adb.getFile(baseUrl, adb.packId(unpacked.project, details.path, unpacked.version), { getFun, downloadFun });
+    if (content instanceof ArrayBuffer) {
+        content = new Uint8Array(content);
+    }
 
     let headers = [];
     let columns = [];
@@ -190,7 +194,11 @@ export async function loadDataFrame(baseUrl, id, { getFun = null, downloadFun = 
 export async function loadScranMatrix(baseUrl, id, { getFun = null, downloadFun = null, forceInteger = true, layered = true } = {} ) {
     let details = await adb.getFileMetadata(baseUrl, id, { getFun });
     let unpacked = adb.unpackId(id);
+
     let content = await adb.getFile(baseUrl, adb.packId(unpacked.project, details.path, unpacked.version), { getFun, downloadFun });
+    if (content instanceof ArrayBuffer) {
+        content = new Uint8Array(content);
+    }
 
     let schema = details["$schema"]
     let is_dense = (schema.startsWith("hdf5_dense_array/") || "hdf5_dense_array" in details);

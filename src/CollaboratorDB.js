@@ -5,7 +5,7 @@ import * as adb from "artifactdb";
 import * as utils from "./utils.js";
 import * as adb_utils from "./ArtifactDB.js";
 
-const baseUrl = "https://collaboratordb.aaron-lun.dev";
+const baseUrl = "https://collaboratordb.aaron-lun.workers.dev";
 
 /**
  * Dataset derived from a SummarizedExperiment in [CollaboratorDB](https://github.com/CollaboratorDB).
@@ -19,11 +19,14 @@ export class CollaboratorDBDataset {
 
     #rowdata;
     #coldata;
-    #counts;
 
-    #featureTypeRnaName;
-    #featureTypeAdtName;
-    #featureTypeCrisprName;
+    #countAssayRnaName;
+    #countAssayAdtName;
+    #countAssayCrisprName;
+
+    #experimentRnaName;
+    #experimentAdtName;
+    #experimentCrisprName;
 
     #primaryRnaFeatureIdColumn;
     #primaryAdtFeatureIdColumn;
@@ -31,9 +34,12 @@ export class CollaboratorDBDataset {
 
     #dump_options() {
         return {
-            featureTypeRnaName: this.#featureTypeRnaName,
-            featureTypeAdtName: this.#featureTypeAdtName,
-            featureTypeCrisprName: this.#featureTypeCrisprName,
+            countAssayRnaName: this.#countAssayRnaName,
+            countAssayAdtName: this.#countAssayAdtName,
+            countAssayCrisprName: this.#countAssayCrisprName,
+            experimentRnaName: this.#experimentRnaName,
+            experimentAdtName: this.#experimentAdtName,
+            experimentCrisprName: this.#experimentCrisprName,
             primaryRnaFeatureIdColumn: this.#primaryRnaFeatureIdColumn,
             primaryAdtFeatureIdColumn: this.#primaryAdtFeatureIdColumn,
             primaryCrisprFeatureIdColumn: this.#primaryCrisprFeatureIdColumn
@@ -43,35 +49,73 @@ export class CollaboratorDBDataset {
     /****************************************
      ****************************************/
 
+    static #getFun = null;
+    static #downloadFun = null;
+
+    /** 
+     * @param {?function} fun - Function that accepts a URL string and downloads the resource,
+     * see [`getFileMetadata`](https://artifactdb.github.io/artifactdb.js/global.html#getFileMetadata) for details.
+     * 
+     * Alternatively `null`, to reset the function to its default value.
+     * @return {?function} Previous setting of the download function.
+     */
+    static setDownloadFun(fun) {
+        let previous = CollaboratorDBDataset.#downloadFun;
+        CollaboratorDBDataset.#downloadFun = fun;
+        return previous;
+    }
+
+    /** 
+     * @param {?function} fun - Function that accepts a URL string and performs a GET to return a Response object,
+     * see [`getFileMetadata`](https://artifactdb.github.io/artifactdb.js/global.html#getFileMetadata) for details.
+     * 
+     * Alternatively `null`, to reset the function to its default value.
+     * @return {?function} Previous setting of the GET function.
+     */
+    static setGetFun(fun) {
+        let previous = CollaboratorDBDataset.#getFun;
+        CollaboratorDBDataset.#getFun = fun;
+        return previous;
+    }
+
+    /****************************************
+     ****************************************/
+
     /**
      * @param {string} id - Identifier of a SummarizedExperiment in CollaboratorDB.
      * @param {object} [options={}] - Optional parameters.
-     * @param {?string} [options.countAssayName=null] - See {@linkcode CollaboratorDBDataset#setCountAssayName setCountAssayName}.
-     * @param {?string} [options.featureTypeRnaName=""] - See {@linkcode CollaboratorDBDataset#setFeatureTypeRnaName setFeatureTypeRnaName}.
-     * @param {?string} [options.featureTypeAdtName="Antibody Capture"] - See {@linkcode CollaboratorDBDataset#setFeatureTypeAdtName setFeatureTypeAdtName}.
-     * @param {?string} [options.featureTypeCrisprName="CRISPR Guide Capture"] - See {@linkcode CollaboratorDBDataset#setFeatureTypeCrisprName setFeatureTypeCrisprName}.
+     * @param {?string} [options.countAssayRnaName=null] - See {@linkcode CollaboratorDBDataset#setCountAssayRnaName setCountAssayRnaName}.
+     * @param {?string} [options.countAssayAdtName=null] - See {@linkcode CollaboratorDBDataset#setCountAssayAdtName setCountAssayAdtName}.
+     * @param {?string} [options.countAssayCrisprName=null] - See {@linkcode CollaboratorDBDataset#setCountAssayCrisprName setCountAssayCrisprName}.
+     * @param {?string} [options.experimentRnaName=""] - See {@linkcode CollaboratorDBDataset#setExperimentRnaName setExperimentRnaName}.
+     * @param {?string} [options.experimentAdtName=null] - See {@linkcode CollaboratorDBDataset#setExperimentAdtName setExperimentAdtName}.
+     * @param {?string} [options.experimentCrisprName=null] - See {@linkcode CollaboratorDBDataset#setExperimentCrisprName setExperimentCrisprName}.
      * @param {string|number} [options.primaryRnaFeatureIdColumn=0] - See {@linkcode CollaboratorDBDataset#setPrimaryRnaFeatureIdColumn setPrimaryRnaFeatureIdColumn}.
      * @param {string|number} [options.primaryAdtFeatureIdColumn=0] - See {@linkcode CollaboratorDBDataset#setPrimaryAdtFeatureIdColumn setPrimaryAdtFeatureIdColumn}.
      * @param {string|number} [options.primaryCrisprFeatureIdColumn=0] - See {@linkcode CollaboratorDBDataset#setPrimaryCrisprFeatureIdColumn setPrimaryCrisprFeatureIdColumn}.
      */
     constructor(id, { 
-        countAssayName = null, 
-        featureTypeRnaName = null,
-        featureTypeAdtName = "Antibody Capture", 
-        featureTypeCrisprName = "CRISPR Guide Capture", 
+        countAssayRnaName = null, 
+        countAssayAdtName = null, 
+        countAssayCrisprName = null, 
+        experimentRnaName = "",
+        experimentAdtName = null,
+        experimentCrisprName = null,
         primaryRnaFeatureIdColumn = 0, 
         primaryAdtFeatureIdColumn = 0,
-        primaryCrisprFeatureIdColumn = 0 
+        primaryCrisprFeatureIdColumn = 0
     } = {}) {
 
         this.#id = id;
         this.#unpacked = adb.unpackId(id);
 
-        this.#countAssayName = countAssayName;
+        this.#countAssayRnaName = countAssayRnaName;
+        this.#countAssayAdtName = countAssayAdtName;
+        this.#countAssayCrisprName = countAssayCrisprName;
 
-        this.#featureTypeRnaName = featureTypeRnaName;
-        this.#featureTypeAdtName = featureTypeAdtName;
-        this.#featureTypeCrisprName = featureTypeCrisprName;
+        this.#experimentRnaName = experimentRnaName;
+        this.#experimentAdtName = experimentAdtName;
+        this.#experimentCrisprName = experimentCrisprName;
 
         this.#primaryRnaFeatureIdColumn = primaryRnaFeatureIdColumn;
         this.#primaryAdtFeatureIdColumn = primaryAdtFeatureIdColumn;
@@ -91,13 +135,9 @@ export class CollaboratorDBDataset {
 
     /**
      * Destroy caches if present, releasing the associated memory.
-     * This may be called at any time but only has an effect if `cache = true` in {@linkcode ExperimentHubDataset#load load} or {@linkcodeExperimentHubDataset#annotations annotations}. 
+     * This may be called at any time but only has an effect if `cache = true` in {@linkcode CollaboratorDBDataset#load load} or {@linkcodeCollaboratorDBDataset#annotations annotations}. 
      */
     clear() {
-        for (const v of Object.values(this.#counts)) {
-            scran.free(v);
-        }
-        this.#counts = null;
         this.#rowdata = null;
         this.#coldata = null;
     }
@@ -113,38 +153,56 @@ export class CollaboratorDBDataset {
      ****************************************/
 
     /**
-     * @param {?string} name - Name of the assay containing the count matrix.
+     * @param {?string} name - Name of the assay containing the count matrix for the RNA experiment.
      * If `null`, the first encountered assay is used.
      */
-    setCountAssayName(name) {
-        this.#countAssayName = name;
+    setCountAssayRnaName(name) {
+        this.#countAssayRnaName = name;
         return;
     }
 
     /**
-     * @param {?string} name - Name of the feature type for gene expression.
+     * @param {?string} name - Name of the assay containing the count matrix for the ADT experiment.
+     * If `null`, the first encountered assay is used.
+     */
+    setCountAssayAdtName(name) {
+        this.#countAssayAdtName = name;
+        return;
+    }
+
+    /**
+     * @param {?string} name - Name of the assay containing the count matrix for the CRISPR experiment.
+     * If `null`, the first encountered assay is used.
+     */
+    setCountAssayCrisprName(name) {
+        this.#countAssayCrisprName = name;
+        return;
+    }
+
+    /**
+     * @param {?string} name - Name of the experiment for gene expression.
      * Alternatively `null`, to indicate that no RNA features are to be loaded.
      */
-    setFeatureTypeRnaName(name) {
-        this.#featureTypeRnaName = name;
+    setExperimentRnaName(name) {
+        this.#experimentRnaName = name;
         return;
     }
 
     /**
-     * @param {string} name - Name of the feature type for ADTs.
+     * @param {string} name - Name of the experiment for ADTs.
      * Alternatively `null`, to indicate that no ADT features are to be loaded.
      */
-    setFeatureTypeAdtName(name) {
-        this.#featureTypeAdtName = name;
+    setExperimentAdtName(name) {
+        this.#experimentAdtName = name;
         return;
     }
 
     /**
-     * @param {?string} name - Name of the feature type for CRISPR guides.
+     * @param {?string} name - Name of the experiment for CRISPR guides.
      * Alternatively `null`, to indicate that no guides are to be loaded.
      */
-    setFeatureTypeCrisprName(name) {
-        this.#featureTypeCrisprName = name;
+    setExperimentCrisprName(name) {
+        this.#experimentCrisprName = name;
         return;
     }
 
@@ -183,9 +241,13 @@ export class CollaboratorDBDataset {
             return;
         }
 
-        this.#metadata = await adb.getFileMetadata(baseUrl, this.#id);
-        this.#alternatives = {};
+        let meta = await adb.getFileMetadata(baseUrl, this.#id, { getFun: this.constructor.#getFun });
+        this.#metadata = meta;
+        if (!("summarized_experiment" in meta)) {
+            throw new Error("no 'summarized_experiment' property present in the metadata");
+        }
 
+        this.#alternatives = {};
         if ("single_cell_experiment" in meta) {
             let scmeta = meta.single_cell_experiment;
             if ("alternative_experiments" in scmeta) {
@@ -193,8 +255,8 @@ export class CollaboratorDBDataset {
                 let names = [];
                 for (const x of scmeta.alternative_experiments) {
                     names.push(x.name);
-                    let alt_id = adb.packId(unpacked.project, x.resource.id, unpacked.version);
-                    collected.push(adb.getFileMetadata(baseUrl, alt_id));
+                    let alt_id = adb.packId(this.#unpacked.project, x.resource.path, this.#unpacked.version);
+                    collected.push(adb.getFileMetadata(baseUrl, alt_id, { getFun: this.constructor.#getFun }));
                 }
 
                 let resolved = await Promise.all(collected);
@@ -212,14 +274,11 @@ export class CollaboratorDBDataset {
 
         await this.#core();
         let meta = this.#metadata;
-        if (!("summarized_experiment" in meta)) {
-            throw new Error("no 'summarized_experiment' property present in the metadata");
-        }
         let smeta = meta.summarized_experiment;
 
         if ("column_data" in smeta) {
-            let df_id = adb.packId(unpacked.project, smeta.column_data.resource.id, unpacked.version);
-            this.#coldata = await adb_utils.loadDataFrame(baseUrl, df_id);
+            let df_id = adb.packId(this.#unpacked.project, smeta.column_data.resource.path, this.#unpacked.version);
+            this.#coldata = await adb_utils.loadDataFrame(baseUrl, df_id, { getFun: this.constructor.#getFun, downloadFun: this.constructor.#downloadFun });
         } else {
             this.#coldata = new bioc.DataFrame({}, { numberOfRows: smeta.dimensions[1] });
         }
@@ -228,14 +287,7 @@ export class CollaboratorDBDataset {
     }
 
     derive_default_name(meta) {
-        let default_name = "";
-        if ("single_cell_experiment" in meta) {
-            let scmeta = meta.single_cell_experiment;
-            if ("main_experiment_name" in scmeta) {
-                default_name = scmeta.main_experiment_name;
-            }
-        }
-        return default_name;
+        return "";
     }
 
     async #features() {
@@ -243,104 +295,44 @@ export class CollaboratorDBDataset {
             return;
         }
 
-        await this.#core();
-        let meta = this.#metadata;
-        if (!("summarized_experiment" in meta)) {
-            throw new Error("no 'summarized_experiment' property present in the metadata");
-        }
-
-        let output = {};
-        let loader = async (se_meta, se_name) => {
+        let tasks = [];
+        let names = [];
+        let loader = (se_meta, se_name) => {
+            names.push(se_name);
             if ("row_data" in se_meta) {
-                let df_id = adb.packId(unpacked.project, se_meta.row_data.resource.id, unpacked.version);
-                output[se_name] = await adb_utils.loadDataFrame(baseUrl, df_id);
+                let df_id = adb.packId(this.#unpacked.project, se_meta.row_data.resource.path, this.#unpacked.version);
+                tasks.push(adb_utils.loadDataFrame(baseUrl, df_id, { getFun: this.constructor.#getFun, downloadFun: this.constructor.#downloadFun }));
             } else {
-                output[se_name] = new bioc.DataFrame({}, { numberOfRows: meta.summarized_experiment.dimensions[0] });
+                tasks.push(new bioc.DataFrame({}, { numberOfRows: se_meta.summarized_experiment.dimensions[0] }));
             }
         };
 
-        await loader(meta.summarized_experiment, derive_default_name(meta));
+        await this.#core();
+        let meta = this.#metadata;
+        loader(meta.summarized_experiment, this.derive_default_name(meta));
         for (const [k, v] of Object.entries(this.#alternatives)) {
-            await loader(v, k);
+            loader(v.summarized_experiment, k);
         }
 
+        let output = {};
+        let resolved = await Promise.all(tasks);
+        for (var i = 0; i < resolved.length; i++) {
+            output[names[i]] = resolved[i];
+        }
         this.#rowdata = output;
         return;
     }
 
-    async #counts() {
-        if (this.#counts_handle !== null) {
-            return;
-        }
-
-        let details = registry[this.#id];
-        let counts_deets = await utils.downloadFun(baseUrl + "/" + details.counts);
-        try {
-            this.#counts_loaded = scran.readRds(counts_deets);
-            this.#counts_handle = this.#counts_loaded.value();
-        } catch(e) {
-            scran.free(this.#counts_handle);
-            scran.free(this.#counts_loaded);
-            throw e;
-        }
-    }
-
-    async #features() {
-        if (this.#rowdata !== null) {
-            return;
-        }
-
-        let details = registry[this.#id];
-
-        if ("rowdata" in details) {
-            let rowdata_deets = await utils.downloadFun(baseUrl + "/" + details.rowdata);
-
-            let rowdata_load;
-            let rowdata_handle;
-            try {
-                rowdata_load = scran.readRds(rowdata_deets);
-                rowdata_handle = rowdata_load.value();
-                let rowdata = load_data_frame(rowdata_handle);
-                let names = rowdata.row_names;
-
-                let output = {};
-                if (names) {
-                    output.id = names;
-                }
-
-                for (const [k, v] of Object.entries(rowdata.columns)) {
-                    if (k.match(/^sym/)) {
-                        output[k] = v;
-                    }
-                }
-
-                if (Object.keys(output).length == 0) {
-                    throw new Error("no acceptable feature identifiers found in the rowData DataFrame");
-                }
-                this.#rowdata = new bioc.DataFrame(output);
-            } finally {
-                scran.free(rowdata_handle);
-                scran.free(rowdata_load);
-            }
-            return;
-        }
-
-        // Otherwise we pull the details from the counts.
-        await this.#counts();
-        let ids = extract_matrix_rownames(this.#counts_handle);
-        this.#rowdata = new bioc.DataFrame({ id: ids });
-    }
-
     /**
      * @param {object} [options={}] - Optional parameters.
-     * @param {boolean} [options.cache=false] - Whether to cache the results for re-use in subsequent calls to this method or {@linkcode ExperimentHubDataset#load load}.
-     * If `true`, users should consider calling {@linkcode ExperimentHubDataset#clear clear} to release the memory once this dataset instance is no longer needed.
+     * @param {boolean} [options.cache=false] - Whether to cache the results for re-use in subsequent calls to this method or {@linkcode CollaboratorDBDataset#load load}.
+     * If `true`, users should consider calling {@linkcode CollaboratorDBDataset#clear clear} to release the memory once this dataset instance is no longer needed.
      * 
      * @return {object} Object containing the per-feature and per-cell annotations.
      * This has the following properties:
      *
      * - `modality_features`: an object where each key is a modality name and each value is a {@linkplain external:DataFrame DataFrame} of per-feature annotations for that modality.
-     *   Unlike {@linkcode ExperimentHubDataset#load load}, modality names are arbitrary.
+     *   Unlike {@linkcode CollaboratorDBDataset#load load}, modality names are arbitrary.
      * - `modality_assay_names`: an object where each key is a modality name and each value is an Array of assay names for that modality.
      *   This should match the modality names in `modality_features`.
      * - `cells`: a {@linkplain external:DataFrame DataFrame} of per-cell annotations.
@@ -349,15 +341,38 @@ export class CollaboratorDBDataset {
         await this.#features();
         await this.#cells();
 
-        let output = { cells: utils.cloneCached(this.#coldata, cache) };
-        let my_rd = utils.cloneCached(this.#rowdata, cache);
-        output.modality_features = { "RNA": my_rd };
+        let output = { 
+            cells: utils.cloneCached(this.#coldata, cache),
+            modality_features: utils.cloneCached(this.#rowdata, cache)
+        };
+
+        // Fetching the assay names for each modality.
+        let modality_assay_names = {};
+        let loader = (se_meta, se_name) => {
+            let assmeta = se_meta.assays;
+            let current = [];
+            for (var i = 0; i < assmeta.length; i++) {
+                current.push(assmeta[i].name);
+            }
+            modality_assay_names[se_name] = current;
+        };
+
+        await this.#core();
+        let meta = this.#metadata;
+        loader(meta.summarized_experiment, this.derive_default_name(meta));
+        for (const [k, v] of Object.entries(this.#alternatives)) {
+            loader(v.summarized_experiment, k);
+        }
+        output.modality_assay_names = modality_assay_names;
 
         if (!cache) {
             this.clear();
         }
         return output;
     }
+
+    /****************************************
+     ****************************************/
 
     /**
      * @param {object} [options={}] - Optional parameters.
@@ -374,39 +389,90 @@ export class CollaboratorDBDataset {
      *
      * Modality names are guaranteed to be one of `"RNA"`, `"ADT"` or `"CRISPR"`.
      * It is assumed that an appropriate mapping from the feature types inside the `featureFile` was previously declared,
-     * either in the constructor or in setters like {@linkcode setFeatureTypeRnaName}.
+     * either in the constructor or in setters like {@linkcode setExperimentRnaName}.
      */
     async load({ cache = false } = {}) {
         await this.#features();
         await this.#cells();
-        await this.#counts();
 
-        let output = {
-            cells: utils.cloneCached(this.#coldata, cache)
-        };
+        await this.#core();
+        let meta = this.#metadata;
 
-        // Hard-coding the fact that we're dealing with RNA here, as all
-        // registry entries are currently RNA-only anyway.
-        let details = registry[this.#id];
-        try {
-            output.matrix = new scran.MultiMatrix;
-            let counts = scran.initializeSparseMatrixFromRds(this.#counts_handle, { consume: !cache });
-
-            output.matrix.add("RNA", counts.matrix);
-            output.row_ids = { "RNA": counts.row_ids };
-
-            let perm_features = bioc.SLICE(this.#rowdata, counts.row_ids);
-            output.features = { "RNA": perm_features };
-        } catch (e) {
-            scran.free(output.matrix);
-            throw e;
+        // Collating metadata for ensuing lookup.
+        let all_meta = {};
+        all_meta[this.derive_default_name(meta)] = meta;
+        for (const [k, v] of Object.entries(this.#alternatives)) {
+            all_meta[k] = v;
         }
 
+        // Rolling through all modalities.
+        let out_mat = new scran.MultiMatrix;
+        let out_rids = {};
+        let out_feats = {};
+        let tasks = [];
+
+        let loader = (modality_name, exp_name, assay_name) => {
+            if (exp_name === null || !(exp_name in all_meta)) {
+                return;
+            }
+
+            let se_meta = all_meta[exp_name];
+            let assmeta = se_meta.summarized_experiment.assays;
+
+            let chosen = null;
+            if (assay_name !== null) {
+                for (var i = 0; i < assmeta.length; i++) {
+                    if (assmeta[i].name === assay_name) {
+                        chosen = i;
+                        break;
+                    }
+                }
+            } else if (assmeta.length > 0) {
+                chosen = 0;
+            }
+
+            // Skipping if the desired assay isn't present for an experiment.
+            if (chosen == null) {
+                return;
+            }
+
+            let curass = assmeta[chosen];
+            let mat_id = adb.packId(this.#unpacked.project, curass.resource.path, this.#unpacked.version);
+
+            let promise = adb_utils.loadScranMatrix(baseUrl, mat_id, { getFun: this.constructor.#getFun, downloadFun: this.constructor.#downloadFun })
+                .then(x => {
+                    out_mat.add(modality_name, x.matrix);
+                    out_rids[modality_name] = x.row_ids;
+                    out_feats[modality_name] = bioc.SLICE(this.#rowdata[exp_name], x.row_ids);
+                }
+            );
+            tasks.push(promise);
+        };
+
+        loader("RNA", this.#experimentRnaName, this.#countAssayRnaName);
+        loader("ADT", this.#experimentAdtName, this.#countAssayAdtName);
+        loader("CRISPR", this.#experimentCrisprName, this.#countAssayCrisprName);
+        await Promise.all(tasks);
+
+        // Assmebling the result.
+        let output = { 
+            cells: utils.cloneCached(this.#coldata, cache),
+            matrix: out_mat,
+            row_ids: out_rids,
+            features: out_feats
+        };
+
         // Setting the primary identifiers.
-        let curfeat = output.features["RNA"];
-        let id = this.primaryRnaFeatureIdColumn;
-        if ((typeof id == "string" && curfeat.hasColumn(id)) || (typeof id == "number" && id < curfeat.numberOfColumns())) {
-            curfeat.$setRowNames(curfeat.column(id));
+        let primaries = {
+            RNA: this.#primaryRnaFeatureIdColumn,
+            ADT: this.#primaryAdtFeatureIdColumn,
+            CRISPR: this.#primaryCrisprFeatureIdColumn
+        };
+        for (const [k, v] of Object.entries(output.features)) {
+            let id = primaries[k];
+            if ((typeof id == "string" && v.hasColumn(id)) || (typeof id == "number" && id < v.numberOfColumns())) {
+                v.$setRowNames(v.column(id));
+            }
         }
 
         if (!cache) {
@@ -441,9 +507,9 @@ export class CollaboratorDBDataset {
     }
 
     /**
-     * @param {Array} files - Array of objects like that produced by {@linkcode ExperimentHubDataset#serialize serialize}.
+     * @param {Array} files - Array of objects like that produced by {@linkcode CollaboratorDBDataset#serialize serialize}.
      * @param {object} options - Object containing additional options to be passed to the constructor.
-     * @return {ExperimentHubDataset} A new instance of this class.
+     * @return {CollaboratorDBDataset} A new instance of this class.
      * @static
      */
     static unserialize(files, options) {
@@ -456,8 +522,8 @@ export class CollaboratorDBDataset {
         }
 
         if (!("id" in args)) {
-            throw new Error("expected a file of type 'id' when unserializing ExperimentHub dataset"); 
+            throw new Error("expected a file of type 'id' when unserializing CollaboratorDB dataset"); 
         }
-        return new ExperimentHubDataset(args.id, options);
+        return new CollaboratorDBDataset(args.id, options);
     }
 }
