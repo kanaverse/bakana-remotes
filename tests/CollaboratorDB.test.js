@@ -7,17 +7,17 @@ beforeAll(utils.initializeAll);
 afterAll(async () => await bakana.terminate());
 
 let id = "dssc-test_basic-2023:my_first_sce@2023-01-19";
-let cdb = new remotes.CollaboratorDBDataset(id);
+let cdb = new remotes.CollaboratorDbDataset(id);
 
-remotes.CollaboratorDBDataset.setDownloadFun(utils.downloader);
-remotes.CollaboratorDBDataset.setGetFun(async url => new Response(await utils.downloader(url)));
+remotes.CollaboratorDbDataset.setDownloadFun(utils.downloader);
+remotes.CollaboratorDbDataset.setGetFun(async url => new Response(await utils.downloader(url)));
 
 test("CollaboratorDB abbreviation works as expected", async () => {
     let abbrev = cdb.abbreviate();
     expect(abbrev.id).toBe(id);
     expect(abbrev.options.crisprCountAssay).toEqual(0);
     expect(abbrev.options.adtExperiment).toBe("Antibody Capture");
-    expect(abbrev.options.primaryRnaFeatureIdColumn).toEqual(0);
+    expect(abbrev.options.primaryRnaFeatureIdColumn).toBeNull();
     expect(cdb.constructor.format()).toBe("CollaboratorDB");
 })
 
@@ -44,7 +44,7 @@ test("CollaboratorDB loading works as expected", async () => {
     expect(details.features.RNA.rowNames().length).toBeGreaterThan(0); // check that the primary ID was correctly set.
 
     // Trying again with strings everywhere.
-    let copy = new remotes.CollaboratorDBDataset(id);
+    let copy = new remotes.CollaboratorDbDataset(id);
     copy.setRnaCountAssay("counts");
     copy.setAdtExperiment("ERCC");
     copy.setCrisprExperiment(0);
@@ -55,7 +55,7 @@ test("CollaboratorDB loading works as expected", async () => {
 
     // Catch some errors!
     copy.setRnaCountAssay("FOO");
-    await expect(copy.load()).rejects.toThrow("cannot find assay")
+    await expect(copy.load()).rejects.toThrow("'FOO' not found")
     copy.setRnaCountAssay(100);
     await expect(copy.load()).rejects.toThrow("out of range")
 
@@ -64,7 +64,7 @@ test("CollaboratorDB loading works as expected", async () => {
 })
 
 test("CollaboratorDB loading works as part of the wider bakana analysis", async () => {
-    bakana.availableReaders["CollaboratorDB"] = remotes.CollaboratorDBDataset;
+    bakana.availableReaders["CollaboratorDB"] = remotes.CollaboratorDbDataset;
     let files = { default: cdb };
 
     let state = await bakana.createAnalysis();
@@ -83,27 +83,24 @@ test("CollaboratorDB loading works as part of the wider bakana analysis", async 
     expect(state.marker_detection.changed).toBe(true);
 
     // Serialization works as expected.
-    const path = "TEST_state_ExperimentHub.h5";
-    let collected = await bakana.saveAnalysis(state, path);
-    utils.validateState(path);
-    expect(collected.collected.length).toBe(1);
+    {
+        let saved = [];
+        let saver = (n, k, f) => {
+            saved.push(f.content());
+            return String(saved.length);
+        };
 
-    const dec = new TextDecoder;
-    expect(dec.decode(collected.collected[0])).toBe(id);
+        let serialized = await bakana.serializeConfiguration(state, saver);
+        const dec = new TextDecoder;
+        expect(dec.decode(saved[0])).toBe(id);
+        expect(serialized.parameters).toEqual(bakana.retrieveParameters(state));
 
-    let offsets = utils.mockOffsets(collected.collected);
-    let reloaded = await bakana.loadAnalysis(
-        path, 
-        (offset, size) => offsets[offset]
-    );
-
-    let new_params = bakana.retrieveParameters(reloaded);
-    expect(new_params.rna_quality_control instanceof Object).toBe(true);
-    expect(new_params.rna_pca instanceof Object).toBe(true);
+        let reloaded = bakana.unserializeDatasets(serialized.datasets, x => saved[Number(x) - 1]); 
+        expect(reloaded.default instanceof remotes.CollaboratorDbDataset);
+    }
 
     // Freeing.
     await bakana.freeAnalysis(state);
-    await bakana.freeAnalysis(reloaded);
 })
 
 

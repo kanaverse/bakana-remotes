@@ -422,7 +422,7 @@ export class ExperimentHubDataset {
      * - `features`: an object where each key is a modality name and each value is a {@linkplain external:DataFrame DataFrame} of per-feature annotations for that modality.
      * - `cells`: a {@linkplain external:DataFrame DataFrame} containing per-cell annotations.
      * - `matrix`: a {@linkplain external:MultiMatrix MultiMatrix} containing one {@linkplain external:ScranMatrix ScranMatrix} per modality.
-     * - `row_ids`: an object where each key is a modality name and each value is an integer array containing the feature identifiers for each row in that modality.
+     * - `primary_ids`: an object where each key is a modality name and each value is an integer array containing the feature identifiers for each row in that modality.
      *
      * Modality names are guaranteed to be one of `"RNA"`, `"ADT"` or `"CRISPR"`.
      * It is assumed that an appropriate mapping from the feature types inside the `featureFile` was previously declared,
@@ -457,8 +457,11 @@ export class ExperimentHubDataset {
         // Setting the primary identifiers.
         let curfeat = output.features["RNA"];
         let id = this.primaryRnaFeatureIdColumn;
+        output.primary_ids = { RNA: null }; 
         if ((typeof id == "string" && curfeat.hasColumn(id)) || (typeof id == "number" && id < curfeat.numberOfColumns())) {
-            curfeat.$setRowNames(curfeat.column(id));
+            output.primary_ids.RNA = curfeat.column(id);
+        } else {
+            output.primary_ids.RNA = curfeat.rowNames();
         }
 
         if (!cache) {

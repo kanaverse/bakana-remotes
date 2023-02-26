@@ -55,27 +55,24 @@ test("ExperimentHub works as part of the wider bakana analysis", async () => {
     expect(state.marker_detection.changed).toBe(true);
 
     // Serialization works as expected.
-    const path = "TEST_state_ExperimentHub.h5";
-    let collected = await bakana.saveAnalysis(state, path);
-    utils.validateState(path);
-    expect(collected.collected.length).toBe(1);
+    {
+        let saved = [];
+        let saver = (n, k, f) => {
+            saved.push(f.content());
+            return String(saved.length);
+        };
 
-    const dec = new TextDecoder;
-    expect(dec.decode(collected.collected[0])).toBe("zeisel-brain");
+        let serialized = await bakana.serializeConfiguration(state, saver);
+        const dec = new TextDecoder;
+        expect(dec.decode(saved[0])).toBe("zeisel-brain");
+        expect(serialized.parameters).toEqual(bakana.retrieveParameters(state));
 
-    let offsets = utils.mockOffsets(collected.collected);
-    let reloaded = await bakana.loadAnalysis(
-        path, 
-        (offset, size) => offsets[offset]
-    );
-
-    let new_params = bakana.retrieveParameters(reloaded);
-    expect(new_params.rna_quality_control instanceof Object).toBe(true);
-    expect(new_params.rna_pca instanceof Object).toBe(true);
+        let reloaded = bakana.unserializeDatasets(serialized.datasets, x => saved[Number(x) - 1]); 
+        expect(reloaded.default instanceof remotes.ExperimentHubDataset);
+    }
 
     // Freeing.
     await bakana.freeAnalysis(state);
-    await bakana.freeAnalysis(reloaded);
 })
 
 test("loading of the Segertolpe dataset works as expected", async () => {

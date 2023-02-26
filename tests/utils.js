@@ -1,12 +1,10 @@
 import * as fs from "fs";
 import * as bakana from "bakana";
 import * as utils from "../src/utils.js";
-import * as valkana from "valkana";
 import "isomorphic-fetch";
 
 export async function initializeAll() {
     await bakana.initialize({ localFile: true });
-    await valkana.initialize({ localFile: true });
 }
 
 export async function downloader(url) {
@@ -31,7 +29,9 @@ export async function downloader(url) {
     return fs.readFileSync(path).slice();
 }
 
-bakana.setCellLabellingDownload(downloader);
+bakana.FeatureSetEnrichmentState.setDownload(downloader);
+bakana.CellLabellingState.setDownload(downloader);
+bakana.RnaQualityControlState.setDownload(downloader);
 
 export function baseParams() {
     let output = bakana.analysisDefaults();
@@ -43,24 +43,5 @@ export function baseParams() {
     output.tsne.iterations = 10;
     output.umap.num_epochs = 10;
 
-    // Actually do something.
-    output.cell_labelling = {
-        mouse_references: [ "ImmGen" ],
-        human_references: [ "BlueprintEncode" ]
-    };
     return output;
-}
-
-export function validateState(path, embedded = true) {
-    valkana.validateState(path, embedded, bakana.kanaFormatVersion);
-}
-
-export function mockOffsets(buffers) {
-    let offsets = {};
-    let sofar = 0;
-    for (const b of buffers) {
-        offsets[sofar] = b;
-        sofar += b.length;
-    }
-    return offsets;
 }
