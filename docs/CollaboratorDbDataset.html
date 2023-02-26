@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>CollaboratorDbDataset - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    <input type="text" id="nav-search" placeholder="Search" />
+    
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.com/LTLA/bakana" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Classes</h3><ul><li><a href="CollaboratorDbDataset.html">CollaboratorDbDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CollaboratorDbDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="CollaboratorDbDataset.html#.setDownloadFun">setDownloadFun</a></li><li data-type='method' style='display: none;'><a href="CollaboratorDbDataset.html#.setGetFun">setGetFun</a></li><li data-type='method' style='display: none;'><a href="CollaboratorDbDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="CollaboratorDbDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="CollaboratorDbDataset.html#serialize">serialize</a></li></ul></li><li><a href="ExperimentHubDataset.html">ExperimentHubDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.availableDatasets">availableDatasets</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.setDownloadFun">setDownloadFun</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#clear">clear</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#serialize">serialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#setPrimaryRnaFeatureIdColumn">setPrimaryRnaFeatureIdColumn</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#summary">summary</a></li></ul></li></ul><h3>Externals</h3><ul><li><a href="external-DataFrame.html">external:DataFrame</a></li><li><a href="external-MultiMatrix.html">external:MultiMatrix</a></li><li><a href="external-ScranMatrix.html">external:ScranMatrix</a></li><li><a href="external-SimpleFile.html">external:SimpleFile</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">CollaboratorDbDataset</h1>
+    
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+        CollaboratorDbDataset
+        </h2>
+        
+            <div class="class-description usertext"><p>Dataset derived from a SummarizedExperiment in <a href="https://github.com/CollaboratorDB">CollaboratorDB</a>.
+This extends the <a href="https://kanaverse.github.io/bakana/ArtifactDbSummarizedExperimentDatasetBase.html">ArtifactDbSummarizedExperimentDatasetBase</a> class.</p></div>
+        
+    
+</header>
+
+<article>
+    
+        <div class="container-overview">
+        
+            
+
+    
+    <h2>Constructor</h2>
+    
+
+    <h4 class="name" id="CollaboratorDbDataset"><span class="type-signature"></span>new CollaboratorDbDataset<span class="signature">(id, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="CollaboratorDB.js.html">CollaboratorDB.js</a>, <a href="CollaboratorDB.js.html#line36">line 36</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Identifier of a SummarizedExperiment in CollaboratorDB.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>Optional parameters, including those passed to the <code>options=</code> argument of the
+<a href="https://kanaverse.github.io/bakana/ArtifactDbSummarizedExperimentDatasetBase.html">ArtifactDbSummarizedExperimentDatasetBase</a> constructor.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        </div>
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="CollaboratorDbDataset.html">CollaboratorDbDataset</a></dt>
+            <dd></dd>
+        </dl>
+    
+    
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id=".format"><span class="type-signature">(static) </span>format<span class="signature">()</span><span class="type-signature"> &rarr; {string}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="CollaboratorDB.js.html">CollaboratorDB.js</a>, <a href="CollaboratorDB.js.html#line88">line 88</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Format of this dataset class.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".setDownloadFun"><span class="type-signature">(static) </span>setDownloadFun<span class="signature">(fun<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; (nullable) {function}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="CollaboratorDB.js.html">CollaboratorDB.js</a>, <a href="CollaboratorDB.js.html#line46">line 46</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fun</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+                    &lt;nullable><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Function that accepts a URL string and downloads the resource,
+returning a Uint8Array of the file contents.
+Alternatively, on Node.js, the function may return a string containing a file path to the downloaded resource.</p>
+<p>Alternatively <code>null</code>, to reset the function to its default value.
+See <a href="https://artifactdb.github.io/artifactdb.js/global.html#getFile"><code>getFile</code></a> for details.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Previous setting of the download function.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".setGetFun"><span class="type-signature">(static) </span>setGetFun<span class="signature">(fun<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; (nullable) {function}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="CollaboratorDB.js.html">CollaboratorDB.js</a>, <a href="CollaboratorDB.js.html#line59">line 59</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fun</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+                    &lt;nullable><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Function that accepts a URL string and performs a GET to return a Response object,
+see <a href="https://artifactdb.github.io/artifactdb.js/global.html#getFileMetadata"><code>getFileMetadata</code></a> for details.</p>
+<p>Alternatively <code>null</code>, to reset the function to its default value.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Previous setting of the GET function.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".unserialize"><span class="type-signature">(static) </span>unserialize<span class="signature">(files, options)</span><span class="type-signature"> &rarr; {<a href="CollaboratorDbDataset.html">CollaboratorDbDataset</a>}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="CollaboratorDB.js.html">CollaboratorDB.js</a>, <a href="CollaboratorDB.js.html#line133">line 133</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>files</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Array of objects like that produced by <a href="CollaboratorDbDataset.html#serialize"><code>serialize</code></a>.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Object containing additional options to be passed to the constructor.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>A new instance of this class.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="CollaboratorDbDataset.html">CollaboratorDbDataset</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="abbreviate"><span class="type-signature"></span>abbreviate<span class="signature">()</span><span class="type-signature"> &rarr; {object}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="CollaboratorDB.js.html">CollaboratorDB.js</a>, <a href="CollaboratorDB.js.html#line95">line 95</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the abbreviated details of this dataset.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="serialize"><span class="type-signature"></span>serialize<span class="signature">()</span><span class="type-signature"> &rarr; {object}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="CollaboratorDB.js.html">CollaboratorDB.js</a>, <a href="CollaboratorDB.js.html#line111">line 111</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object describing this dataset, containing:</p>
+<ul>
+<li><code>files</code>: Array of objects representing the files used in this dataset.
+Each object corresponds to a single file and contains:
+<ul>
+<li><code>type</code>: a string denoting the type.</li>
+<li><code>file</code>: a SimpleFile object representing the file contents.</li>
+</ul>
+</li>
+<li><code>options</code>: An object containing additional options to saved.</li>
+</ul>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Sun Feb 26 2023 01:09:40 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+<script src="scripts/search.js" defer></script>
+
+
+<script src="scripts/collapse.js" defer></script>
+
+
+</body>
+</html>
