@@ -9,7 +9,7 @@ const baseUrl = "https://collaboratordb.aaron-lun.workers.dev";
 var getFun = null;
 var downloadFun = null;
 
-class CollaboratorDbNavigator {
+class CollaboratordbNavigator {
     #project;
     #version;
 
@@ -31,9 +31,9 @@ class CollaboratorDbNavigator {
 
 /**
  * Dataset derived from a SummarizedExperiment in [CollaboratorDB](https://github.com/CollaboratorDB).
- * This extends the [ArtifactDbSummarizedExperimentDatasetBase](https://kanaverse.github.io/bakana/ArtifactDbSummarizedExperimentDatasetBase.html) class.
+ * This extends the [AbstractArtifactdbDataset](https://kanaverse.github.io/bakana/AbstractArtifactdbDataset.html) class.
  */
-export class CollaboratorDbDataset extends bakana.ArtifactDbSummarizedExperimentDatasetBase {
+export class CollaboratordbDataset extends bakana.AbstractArtifactdbDataset {
     /** 
      * @param {?function} fun - Function that accepts a URL string and downloads the resource,
      * returning a Uint8Array of the file contents.
@@ -71,11 +71,11 @@ export class CollaboratorDbDataset extends bakana.ArtifactDbSummarizedExperiment
     /**
      * @param {string} id - Identifier of a SummarizedExperiment in CollaboratorDB.
      * @param {object} [options={}] - Optional parameters, including those passed to the `options=` argument of the 
-     * [ArtifactDbSummarizedExperimentDatasetBase](https://kanaverse.github.io/bakana/ArtifactDbSummarizedExperimentDatasetBase.html) constructor.
+     * [ArtifactdbSummarizedExperimentDatasetBase](https://kanaverse.github.io/bakana/ArtifactdbSummarizedExperimentDatasetBase.html) constructor.
      */
     constructor(id, options = {}) {
         let unpacked = adb.unpackId(id);
-        super(unpacked.path, new CollaboratorDbNavigator(unpacked.project, unpacked.version), options);
+        super(unpacked.path, new CollaboratordbNavigator(unpacked.project, unpacked.version), options);
         this.#id = id;
         this.#unpacked = unpacked;
         return;
@@ -125,9 +125,9 @@ export class CollaboratorDbDataset extends bakana.ArtifactDbSummarizedExperiment
     }
 
     /**
-     * @param {Array} files - Array of objects like that produced by {@linkcode CollaboratorDbDataset#serialize serialize}.
+     * @param {Array} files - Array of objects like that produced by {@linkcode CollaboratordbDataset#serialize serialize}.
      * @param {object} options - Object containing additional options to be passed to the constructor.
-     * @return {CollaboratorDbDataset} A new instance of this class.
+     * @return {CollaboratordbDataset} A new instance of this class.
      * @static
      */
     static unserialize(files, options) {
@@ -142,6 +142,6 @@ export class CollaboratorDbDataset extends bakana.ArtifactDbSummarizedExperiment
         if (!("id" in args)) {
             throw new Error("expected a file of type 'id' when unserializing CollaboratorDB dataset"); 
         }
-        return new CollaboratorDbDataset(args.id, options);
+        return new CollaboratordbDataset(args.id, options);
     }
 }
