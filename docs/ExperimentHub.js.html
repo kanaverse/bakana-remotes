@@ -29,7 +29,7 @@
     
     <input type="text" id="nav-search" placeholder="Search" />
     
-    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.com/LTLA/bakana" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Classes</h3><ul><li><a href="CollaboratordbDataset.html">CollaboratordbDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.setDownloadFun">setDownloadFun</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.setGetFun">setGetFun</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#serialize">serialize</a></li></ul></li><li><a href="ExperimentHubDataset.html">ExperimentHubDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.availableDatasets">availableDatasets</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.setDownloadFun">setDownloadFun</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#clear">clear</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#serialize">serialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#setPrimaryRnaFeatureIdColumn">setPrimaryRnaFeatureIdColumn</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#summary">summary</a></li></ul></li></ul><h3>Externals</h3><ul><li><a href="external-DataFrame.html">external:DataFrame</a></li><li><a href="external-MultiMatrix.html">external:MultiMatrix</a></li><li><a href="external-ScranMatrix.html">external:ScranMatrix</a></li><li><a href="external-SimpleFile.html">external:SimpleFile</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.com/LTLA/bakana" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Classes</h3><ul><li><a href="CollaboratordbDataset.html">CollaboratordbDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.setDownloadFun">setDownloadFun</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.setGetFun">setGetFun</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#serialize">serialize</a></li></ul></li><li><a href="ExperimentHubDataset.html">ExperimentHubDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.availableDatasets">availableDatasets</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.defaults">defaults</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.setDownloadFun">setDownloadFun</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#clear">clear</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#options">options</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#serialize">serialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#setOptions">setOptions</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#summary">summary</a></li></ul></li></ul><h3>Externals</h3><ul><li><a href="external-DataFrame.html">external:DataFrame</a></li><li><a href="external-MultiMatrix.html">external:MultiMatrix</a></li><li><a href="external-ScranMatrix.html">external:ScranMatrix</a></li><li><a href="external-SimpleFile.html">external:SimpleFile</a></li></ul>
 </nav>
 
 <div id="main">
@@ -241,13 +241,7 @@ export class ExperimentHubDataset {
     // dataset in our registry, so there's no need to provide options for that.
     // However, we might not know how to choose an appropriate primary
     // identifier for combining datasets, hence these options.
-    #primaryRnaFeatureIdColumn;
-
-    #dump_options() {
-        return {
-            primaryRnaFeatureIdColumn: this.#primaryRnaFeatureIdColumn
-        };
-    }
+    #options;
 
     /****************************************
      ****************************************/
@@ -286,20 +280,42 @@ export class ExperimentHubDataset {
     /**
      * @param {string} id - Identifier of a dataset to load.
      * This should be a string in {@linkcode ExperimentHubDataset.availableDatasets availableDatasets}.
-     * @param {object} [options={}] - Optional parameters.
-     * @param {string|number} [options.primaryRnaFeatureIdColumn=0] - See {@linkcode TenxHdf5Dataset#setPrimaryRnaFeatureIdColumn setPrimaryRnaFeatureIdColumn}.
      */
-    constructor(id, { 
-        primaryRnaFeatureIdColumn = 0
-    } = {}) {
+    constructor(id) {
         this.#id = id;
         if (!(this.#id in registry)) {
             throw new Error("unrecognized identifier '" + this.#id + "' for ExperimentHub-based datasets");
         }
 
-        this.#primaryRnaFeatureIdColumn = primaryRnaFeatureIdColumn;
-
+        this.#options = ExperimentHubDataset.defaults();
         this.clear();
+    }
+
+    /**
+     * @return {object} Default options, see {@linkcode ExperimentHubDataset#setOptions setOptions} for more details.
+     */
+    static defaults() {
+        return {
+            primaryRnaFeatureIdColumn: 0
+        };
+    }
+
+    /**
+     * @return {object} Object containing all options used for loading.
+     */
+    options() {
+        return { ...(this.#options) };
+    }
+
+    /**
+     * @param {object} options - Optional parameters that affect {@linkcode ExperimentHubDataset#load load} (but not {@linkcode ExperimentHubDataset#summary summary}).
+     * @param {string|number} [options.primaryRnaFeatureIdColumn] - Name or index of the column of the `features` {@linkplain external:DataFrame DataFrame} that contains the primary feature identifier for gene expression.
+     * If `i` is invalid (e.g., out of range index, unavailable name), it is ignored and the primary identifier is treated as undefined.
+     */
+    setOptions(options) {
+        for (const [k, v] of Object.entries(options)) {
+            this.#options[k] = v;
+        }
     }
 
     /**
@@ -327,16 +343,7 @@ export class ExperimentHubDataset {
      * @return {object} Object containing the abbreviated details of this dataset.
      */
     abbreviate() {
-        return { "id": this.#id, "options": this.#dump_options() };
-    }
-
-    /**
-     * @param {string|number} i - Name or index of the column of the `features` {@linkplain external:DataFrame DataFrame} that contains the primary feature identifier for gene expression.
-     * If `i` is invalid (e.g., out of range index, unavailable name), it is ignored and the primary identifier is treated as undefined.
-     */
-    setPrimaryRnaFeatureIdColumn(i) {
-        this.#primaryRnaFeatureIdColumn = i;
-        return;
+        return { "id": this.#id, "options": this.options() };
     }
 
     async #counts() {
@@ -471,8 +478,8 @@ export class ExperimentHubDataset {
      * - `primary_ids`: an object where each key is a modality name and each value is an integer array containing the feature identifiers for each row in that modality.
      *
      * Modality names are guaranteed to be one of `"RNA"`, `"ADT"` or `"CRISPR"`.
-     * It is assumed that an appropriate mapping from the feature types inside the `featureFile` was previously declared,
-     * either in the constructor or in setters like {@linkcode setFeatureTypeRnaName}.
+     * We assume that the instance already contains an appropriate mapping from the observed feature types to each expected modality,
+     * either from the {@linkcode ExperimentHubDataset#defaults defaults} or with {@linkcode ExperimentHubDataset#setOptions setOptions}.
      */
     async load({ cache = false } = {}) {
         await this.#features();
@@ -502,7 +509,7 @@ export class ExperimentHubDataset {
 
         // Setting the primary identifiers.
         let curfeat = output.features["RNA"];
-        let id = this.primaryRnaFeatureIdColumn;
+        let id = this.#options.primaryRnaFeatureIdColumn;
         output.primary_ids = { RNA: null }; 
         if ((typeof id == "string" &amp;&amp; curfeat.hasColumn(id)) || (typeof id == "number" &amp;&amp; id &lt; curfeat.numberOfColumns())) {
             output.primary_ids.RNA = curfeat.column(id);
@@ -537,7 +544,7 @@ export class ExperimentHubDataset {
 
         return {
             files: [ output ],
-            options: this.#dump_options()
+            options: this.options()
         }
     }
 
@@ -576,7 +583,7 @@ export class ExperimentHubDataset {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Fri Mar 10 2023 20:31:23 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Wed Apr 05 2023 05:53:44 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
