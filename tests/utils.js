@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as bakana from "bakana";
+import * as gesel from "gesel";
 import * as utils from "../src/utils.js";
 import "isomorphic-fetch";
 
@@ -29,9 +30,18 @@ export async function downloader(url) {
     return fs.readFileSync(path).slice();
 }
 
-bakana.FeatureSetEnrichmentState.setDownload(downloader);
 bakana.CellLabellingState.setDownload(downloader);
 bakana.RnaQualityControlState.setDownload(downloader);
+
+gesel.referenceDownload(async file => {
+    let res = await downloader(gesel.referenceBaseUrl() + "/" + file);
+    return { ok: true, arrayBuffer: () => res }; // mimic Response object.
+});
+
+gesel.geneDownload(async file => {
+    let res = await downloader(gesel.geneBaseUrl() + "/" + file);
+    return { ok: true, arrayBuffer: () => res }; // mimic Response object.
+});
 
 export function baseParams() {
     let output = bakana.analysisDefaults();

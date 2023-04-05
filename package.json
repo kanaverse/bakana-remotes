@@ -24,7 +24,7 @@
   "license": "MIT",
   "dependencies": {
     "artifactdb": "^0.1.1",
-    "bakana": "^2.0.3",
+    "bakana": "^2.0.9",
     "bioconductor": "^0.3.1",
     "pako": "^2.0.4",
     "papaparse": "^5.3.2",
