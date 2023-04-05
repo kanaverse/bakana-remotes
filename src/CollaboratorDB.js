@@ -70,12 +70,10 @@ export class CollaboratordbDataset extends bakana.AbstractArtifactdbDataset {
 
     /**
      * @param {string} id - Identifier of a SummarizedExperiment in CollaboratorDB.
-     * @param {object} [options={}] - Optional parameters, including those passed to the `options=` argument of the 
-     * [ArtifactdbSummarizedExperimentDatasetBase](https://kanaverse.github.io/bakana/ArtifactdbSummarizedExperimentDatasetBase.html) constructor.
      */
-    constructor(id, options = {}) {
+    constructor(id) {
         let unpacked = adb.unpackId(id);
-        super(unpacked.path, new CollaboratordbNavigator(unpacked.project, unpacked.version), options);
+        super(unpacked.path, new CollaboratordbNavigator(unpacked.project, unpacked.version));
         this.#id = id;
         this.#unpacked = unpacked;
         return;

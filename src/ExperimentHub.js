@@ -195,13 +195,7 @@ export class ExperimentHubDataset {
     // dataset in our registry, so there's no need to provide options for that.
     // However, we might not know how to choose an appropriate primary
     // identifier for combining datasets, hence these options.
-    #primaryRnaFeatureIdColumn;
-
-    #dump_options() {
-        return {
-            primaryRnaFeatureIdColumn: this.#primaryRnaFeatureIdColumn
-        };
-    }
+    #options;
 
     /****************************************
      ****************************************/
@@ -240,20 +234,42 @@ export class ExperimentHubDataset {
     /**
      * @param {string} id - Identifier of a dataset to load.
      * This should be a string in {@linkcode ExperimentHubDataset.availableDatasets availableDatasets}.
-     * @param {object} [options={}] - Optional parameters.
-     * @param {string|number} [options.primaryRnaFeatureIdColumn=0] - See {@linkcode TenxHdf5Dataset#setPrimaryRnaFeatureIdColumn setPrimaryRnaFeatureIdColumn}.
      */
-    constructor(id, { 
-        primaryRnaFeatureIdColumn = 0
-    } = {}) {
+    constructor(id) {
         this.#id = id;
         if (!(this.#id in registry)) {
             throw new Error("unrecognized identifier '" + this.#id + "' for ExperimentHub-based datasets");
         }
 
-        this.#primaryRnaFeatureIdColumn = primaryRnaFeatureIdColumn;
-
+        this.#options = ExperimentHubDataset.defaults();
         this.clear();
+    }
+
+    /**
+     * @return {object} Default options, see {@linkcode ExperimentHubDataset#setOptions setOptions} for more details.
+     */
+    static defaults() {
+        return {
+            primaryRnaFeatureIdColumn: 0
+        };
+    }
+
+    /**
+     * @return {object} Object containing all options used for loading.
+     */
+    options() {
+        return { ...(this.#options) };
+    }
+
+    /**
+     * @param {object} options - Optional parameters that affect {@linkcode ExperimentHubDataset#load load} (but not {@linkcode ExperimentHubDataset#summary summary}).
+     * @param {string|number} [options.primaryRnaFeatureIdColumn] - Name or index of the column of the `features` {@linkplain external:DataFrame DataFrame} that contains the primary feature identifier for gene expression.
+     * If `i` is invalid (e.g., out of range index, unavailable name), it is ignored and the primary identifier is treated as undefined.
+     */
+    setOptions(options) {
+        for (const [k, v] of Object.entries(options)) {
+            this.#options[k] = v;
+        }
     }
 
     /**
@@ -281,16 +297,7 @@ export class ExperimentHubDataset {
      * @return {object} Object containing the abbreviated details of this dataset.
      */
     abbreviate() {
-        return { "id": this.#id, "options": this.#dump_options() };
-    }
-
-    /**
-     * @param {string|number} i - Name or index of the column of the `features` {@linkplain external:DataFrame DataFrame} that contains the primary feature identifier for gene expression.
-     * If `i` is invalid (e.g., out of range index, unavailable name), it is ignored and the primary identifier is treated as undefined.
-     */
-    setPrimaryRnaFeatureIdColumn(i) {
-        this.#primaryRnaFeatureIdColumn = i;
-        return;
+        return { "id": this.#id, "options": this.options() };
     }
 
     async #counts() {
@@ -425,8 +432,8 @@ export class ExperimentHubDataset {
      * - `primary_ids`: an object where each key is a modality name and each value is an integer array containing the feature identifiers for each row in that modality.
      *
      * Modality names are guaranteed to be one of `"RNA"`, `"ADT"` or `"CRISPR"`.
-     * It is assumed that an appropriate mapping from the feature types inside the `featureFile` was previously declared,
-     * either in the constructor or in setters like {@linkcode setFeatureTypeRnaName}.
+     * We assume that the instance already contains an appropriate mapping from the observed feature types to each expected modality,
+     * either from the {@linkcode ExperimentHubDataset#defaults defaults} or with {@linkcode ExperimentHubDataset#setOptions setOptions}.
      */
     async load({ cache = false } = {}) {
         await this.#features();
@@ -456,7 +463,7 @@ export class ExperimentHubDataset {
 
         // Setting the primary identifiers.
         let curfeat = output.features["RNA"];
-        let id = this.primaryRnaFeatureIdColumn;
+        let id = this.#options.primaryRnaFeatureIdColumn;
         output.primary_ids = { RNA: null }; 
         if ((typeof id == "string" && curfeat.hasColumn(id)) || (typeof id == "number" && id < curfeat.numberOfColumns())) {
             output.primary_ids.RNA = curfeat.column(id);
@@ -491,7 +498,7 @@ export class ExperimentHubDataset {
 
         return {
             files: [ output ],
-            options: this.#dump_options()
+            options: this.options()
         }
     }
 

@@ -45,18 +45,20 @@ test("CollaboratorDB loading works as expected", async () => {
 
     // Trying again with strings everywhere.
     let copy = new remotes.CollaboratordbDataset(id);
-    copy.setRnaCountAssay("counts");
-    copy.setAdtExperiment("ERCC");
-    copy.setCrisprExperiment(0);
+    copy.setOptions({
+        rnaCountAssay: "counts",
+        adtExperiment: "ERCC",
+        crisprExperiment: 0
+    });
 
     let details2 = await copy.load();
     expect(details2.matrix.get("ADT").numberOfRows()).toBeLessThan(details2.matrix.get("RNA").numberOfRows());
     expect(details2.matrix.get("CRISPR").numberOfRows()).toEqual(details2.matrix.get("CRISPR").numberOfRows());
 
     // Catch some errors!
-    copy.setRnaCountAssay("FOO");
+    copy.setOptions({ rnaCountAssay: "FOO" });
     await expect(copy.load()).rejects.toThrow("'FOO' not found")
-    copy.setRnaCountAssay(100);
+    copy.setOptions({ rnaCountAssay: 100 });
     await expect(copy.load()).rejects.toThrow("out of range")
 
     scran.free(details2.matrix);
