@@ -29,7 +29,7 @@
     
     <input type="text" id="nav-search" placeholder="Search" />
     
-    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.com/LTLA/bakana" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Classes</h3><ul><li><a href="CollaboratordbDataset.html">CollaboratordbDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.setDownloadFun">setDownloadFun</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.setGetFun">setGetFun</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#serialize">serialize</a></li></ul></li><li><a href="ExperimentHubDataset.html">ExperimentHubDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.availableDatasets">availableDatasets</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.defaults">defaults</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.setDownloadFun">setDownloadFun</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#clear">clear</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#options">options</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#serialize">serialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#setOptions">setOptions</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#summary">summary</a></li></ul></li></ul><h3>Externals</h3><ul><li><a href="external-DataFrame.html">external:DataFrame</a></li><li><a href="external-MultiMatrix.html">external:MultiMatrix</a></li><li><a href="external-ScranMatrix.html">external:ScranMatrix</a></li><li><a href="external-SimpleFile.html">external:SimpleFile</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.com/LTLA/bakana" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Classes</h3><ul><li><a href="CollaboratordbDataset.html">CollaboratordbDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.setDownloadFun">setDownloadFun</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.setGetFun">setGetFun</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="CollaboratordbDataset.html#serialize">serialize</a></li></ul></li><li><a href="ExperimentHubDataset.html">ExperimentHubDataset</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.availableDatasets">availableDatasets</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.defaults">defaults</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.format">format</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.setDownloadFun">setDownloadFun</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#.unserialize">unserialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#abbreviate">abbreviate</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#clear">clear</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#options">options</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#previewPrimaryIds">previewPrimaryIds</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#serialize">serialize</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#setOptions">setOptions</a></li><li data-type='method' style='display: none;'><a href="ExperimentHubDataset.html#summary">summary</a></li></ul></li></ul><h3>Externals</h3><ul><li><a href="external-DataFrame.html">external:DataFrame</a></li><li><a href="external-MultiMatrix.html">external:MultiMatrix</a></li><li><a href="external-ScranMatrix.html">external:ScranMatrix</a></li><li><a href="external-SimpleFile.html">external:SimpleFile</a></li></ul>
 </nav>
 
 <div id="main">
@@ -440,7 +440,7 @@ export class ExperimentHubDataset {
 
     /**
      * @param {object} [options={}] - Optional parameters.
-     * @param {boolean} [options.cache=false] - Whether to cache the results for re-use in subsequent calls to this method or {@linkcode ExperimentHubDataset#load load}.
+     * @param {boolean} [options.cache=false] - Whether to cache the intermediate results for re-use in subsequent calls to any methods with a `cache` option.
      * If `true`, users should consider calling {@linkcode ExperimentHubDataset#clear clear} to release the memory once this dataset instance is no longer needed.
      * 
      * @return {object} Object containing the per-feature and per-cell annotations.
@@ -464,10 +464,38 @@ export class ExperimentHubDataset {
         return output;
     }
 
+    #fetchPrimaryId(curfeat) {
+        let id = this.#options.primaryRnaFeatureIdColumn;
+        if ((typeof id == "string" &amp;&amp; curfeat.hasColumn(id)) || (typeof id == "number" &amp;&amp; id &lt; curfeat.numberOfColumns())) {
+            return { RNA: curfeat.column(id) };
+        } else {
+            return { RNA: curfeat.rowNames() };
+        }
+    }
+
     /**
      * @param {object} [options={}] - Optional parameters.
-     * @param {boolean} [options.cache=false] - Whether to cache the results for re-use in subsequent calls to this method or {@linkcode TenxHdf5Dataset#summary summary}.
-     * If `true`, users should consider calling {@linkcode TenxHdf5Dataset#clear clear} to release the memory once this dataset instance is no longer needed.
+     * @param {boolean} [options.cache=false] - Whether to cache the intermediate results for re-use in subsequent calls to any methods with a `cache` option.
+     * If `true`, users should consider calling {@linkcode ExperimentHubDataset#clear clear} to release the memory once this dataset instance is no longer needed.
+     *
+     * @return {object} An object where each key is a modality name and each value is an array (usually of strings) containing the primary feature identifiers for each row in that modality.
+     * The contents are the same as the `primary_ids` returned by {@linkcode ExperimentHubDataset#load load} but the order of values may be different.
+     *
+     * @async
+     */
+    async previewPrimaryIds({ cache = false } = {}) {
+        await this.#features();
+        let preview = this.#fetchPrimaryId(this.#rowdata);
+        if (!cache) {
+            this.clear();
+        }
+        return preview;
+    }
+
+    /**
+     * @param {object} [options={}] - Optional parameters.
+     * @param {boolean} [options.cache=false] - Whether to cache the intermediate results for re-use in subsequent calls to any methods with a `cache` option.
+     * If `true`, users should consider calling {@linkcode ExperimentHubDataset#clear clear} to release the memory once this dataset instance is no longer needed.
      *
      * @return {object} Object containing the per-feature and per-cell annotations.
      * This has the following properties:
@@ -507,15 +535,7 @@ export class ExperimentHubDataset {
             throw e;
         }
 
-        // Setting the primary identifiers.
-        let curfeat = output.features["RNA"];
-        let id = this.#options.primaryRnaFeatureIdColumn;
-        output.primary_ids = { RNA: null }; 
-        if ((typeof id == "string" &amp;&amp; curfeat.hasColumn(id)) || (typeof id == "number" &amp;&amp; id &lt; curfeat.numberOfColumns())) {
-            output.primary_ids.RNA = curfeat.column(id);
-        } else {
-            output.primary_ids.RNA = curfeat.rowNames();
-        }
+        output.primary_ids = this.#fetchPrimaryId(output.features.RNA);
 
         if (!cache) {
             this.clear();
@@ -583,7 +603,7 @@ export class ExperimentHubDataset {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Wed Apr 05 2023 05:53:44 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Thu Apr 06 2023 04:53:30 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
