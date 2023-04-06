@@ -394,7 +394,7 @@ export class ExperimentHubDataset {
 
     /**
      * @param {object} [options={}] - Optional parameters.
-     * @param {boolean} [options.cache=false] - Whether to cache the results for re-use in subsequent calls to this method or {@linkcode ExperimentHubDataset#load load}.
+     * @param {boolean} [options.cache=false] - Whether to cache the intermediate results for re-use in subsequent calls to any methods with a `cache` option.
      * If `true`, users should consider calling {@linkcode ExperimentHubDataset#clear clear} to release the memory once this dataset instance is no longer needed.
      * 
      * @return {object} Object containing the per-feature and per-cell annotations.
@@ -418,10 +418,38 @@ export class ExperimentHubDataset {
         return output;
     }
 
+    #fetchPrimaryId(curfeat) {
+        let id = this.#options.primaryRnaFeatureIdColumn;
+        if ((typeof id == "string" && curfeat.hasColumn(id)) || (typeof id == "number" && id < curfeat.numberOfColumns())) {
+            return { RNA: curfeat.column(id) };
+        } else {
+            return { RNA: curfeat.rowNames() };
+        }
+    }
+
     /**
      * @param {object} [options={}] - Optional parameters.
-     * @param {boolean} [options.cache=false] - Whether to cache the results for re-use in subsequent calls to this method or {@linkcode TenxHdf5Dataset#summary summary}.
-     * If `true`, users should consider calling {@linkcode TenxHdf5Dataset#clear clear} to release the memory once this dataset instance is no longer needed.
+     * @param {boolean} [options.cache=false] - Whether to cache the intermediate results for re-use in subsequent calls to any methods with a `cache` option.
+     * If `true`, users should consider calling {@linkcode ExperimentHubDataset#clear clear} to release the memory once this dataset instance is no longer needed.
+     *
+     * @return {object} An object where each key is a modality name and each value is an array (usually of strings) containing the primary feature identifiers for each row in that modality.
+     * The contents are the same as the `primary_ids` returned by {@linkcode ExperimentHubDataset#load load} but the order of values may be different.
+     *
+     * @async
+     */
+    async previewPrimaryIds({ cache = false } = {}) {
+        await this.#features();
+        let preview = this.#fetchPrimaryId(this.#rowdata);
+        if (!cache) {
+            this.clear();
+        }
+        return preview;
+    }
+
+    /**
+     * @param {object} [options={}] - Optional parameters.
+     * @param {boolean} [options.cache=false] - Whether to cache the intermediate results for re-use in subsequent calls to any methods with a `cache` option.
+     * If `true`, users should consider calling {@linkcode ExperimentHubDataset#clear clear} to release the memory once this dataset instance is no longer needed.
      *
      * @return {object} Object containing the per-feature and per-cell annotations.
      * This has the following properties:
@@ -461,15 +489,7 @@ export class ExperimentHubDataset {
             throw e;
         }
 
-        // Setting the primary identifiers.
-        let curfeat = output.features["RNA"];
-        let id = this.#options.primaryRnaFeatureIdColumn;
-        output.primary_ids = { RNA: null }; 
-        if ((typeof id == "string" && curfeat.hasColumn(id)) || (typeof id == "number" && id < curfeat.numberOfColumns())) {
-            output.primary_ids.RNA = curfeat.column(id);
-        } else {
-            output.primary_ids.RNA = curfeat.rowNames();
-        }
+        output.primary_ids = this.#fetchPrimaryId(output.features.RNA);
 
         if (!cache) {
             this.clear();

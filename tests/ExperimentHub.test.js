@@ -17,9 +17,13 @@ test("ExperimentHub abbreviation works as expected", async () => {
 })
 
 test("ExperimentHub preflight works as expected", async () => {
-    let pre = await ehub.summary();
-    expect(pre.modality_features.RNA.numberOfRows()).toBeGreaterThan(0);
-    expect(pre.cells.column("level1class").length).toBeGreaterThan(0);
+    let summ = await ehub.summary();
+    expect(summ.modality_features.RNA.numberOfRows()).toBeGreaterThan(0);
+    expect(summ.cells.column("level1class").length).toBeGreaterThan(0);
+
+    let preview = await ehub.previewPrimaryIds();
+    expect("RNA" in preview).toBe(true);
+    expect(preview.RNA.length).toBeGreaterThan(0);
 })
 
 test("ExperimentHub loading works as expected", async () => {
