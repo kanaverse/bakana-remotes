@@ -478,12 +478,8 @@ export class ExperimentHubDataset {
         try {
             output.matrix = new scran.MultiMatrix;
             let counts = scran.initializeSparseMatrixFromRds(this.#counts_handle, { consume: !cache });
-
-            output.matrix.add("RNA", counts.matrix);
-            output.row_ids = { "RNA": counts.row_ids };
-
-            let perm_features = bioc.SLICE(this.#rowdata, counts.row_ids);
-            output.features = { "RNA": perm_features };
+            output.matrix.add("RNA", counts);
+            output.features = { "RNA": this.#rowdata };
         } catch (e) {
             scran.free(output.matrix);
             throw e;

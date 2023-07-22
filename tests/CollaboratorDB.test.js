@@ -39,7 +39,6 @@ test("CollaboratorDB loading works as expected", async () => {
     let mat = details.matrix.get("RNA");
     expect(mat.numberOfRows()).toEqual(details.features["RNA"].numberOfRows());
     expect(mat.numberOfColumns()).toEqual(details.cells.numberOfRows());
-    expect(details.row_ids.RNA.length).toEqual(mat.numberOfRows());
 
     expect(details.features.RNA.rowNames().length).toBeGreaterThan(0); // check that the primary ID was correctly set.
 
