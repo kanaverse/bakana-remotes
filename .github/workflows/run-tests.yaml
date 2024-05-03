@@ -2,7 +2,15 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'package.json'
+      - 'tests/**'
+      - 'src/**'
   pull_request:
+    paths:
+      - 'package.json'
+      - 'tests/**'
+      - 'src/**'
 
 name: Run tests
 
