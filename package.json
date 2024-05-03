@@ -25,6 +25,7 @@
   "dependencies": {
     "artifactdb": "^0.1.1",
     "bakana": "^3.0.0",
+    "bakana-takane": "^0.1.0",
     "bioconductor": "^0.3.1",
     "pako": "^2.0.4",
     "papaparse": "^5.3.2",
