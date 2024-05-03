@@ -62,9 +62,9 @@ export class GypsumDataset extends bt.AbstractDataset {
     #id;
 
     /**
-     * @param {function} get - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
+     * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
      * Alternatively `null`, to reset the function to its default value based on `fetch`.
-     * @return {?function} Previous setting of the GET function.
+     * @return {?function} Previous setting of the getter function.
      */
     static setGetFun(fun) {
         let previous = getFunDataset;
@@ -139,9 +139,9 @@ export class GypsumDataset extends bt.AbstractDataset {
     }
 
     /**
-     * @param {Array} files - Array of objects like that produced by {@linkcode CollaboratordbDataset#serialize serialize}.
+     * @param {Array} files - Array of objects like that produced by {@linkcode GypsumDataset#serialize serialize}.
      * @param {object} options - Object containing additional options to be passed to the constructor.
-     * @return {CollaboratordbDataset} A new instance of this class.
+     * @return {GypsumDataset} A new instance of this class.
      * @static
      */
     static async unserialize(files, options) {
@@ -154,7 +154,7 @@ export class GypsumDataset extends bt.AbstractDataset {
         }
 
         if (!("id" in args)) {
-            throw new Error("expected a file of type 'id' when unserializing CollaboratorDB dataset"); 
+            throw new Error("expected a file of type 'id' when unserializing a GypsumDataset"); 
         }
         const id = JSON.parse(args.id);
 
@@ -173,7 +173,7 @@ export class GypsumResult extends bt.AbstractResult {
     /**
      * @param {function} get - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
      * Alternatively `null`, to reset the function to its default value based on `fetch`.
-     * @return {?function} Previous setting of the GET function.
+     * @return {?function} Previous setting of the getter function.
      */
     static setGetFun(fun) {
         let previous = getFunResult;
