@@ -6,6 +6,8 @@ import * as utils from "./utils.js";
 
 var getFunDataset = null;
 var getFunResult = null;
+var listFunDataset = null;
+var listFunResult = null;
 
 async function defaultGetFun(u) {
     const res = await fetch(u);
@@ -27,7 +29,7 @@ async function defaultListFun(u) {
     return res.json();
 }
 
-async function createSewerRatFunctions(url, get, list) {
+function createSewerRatFunctions(url, get, list) {
     const getter = p => get(url + "/retrieve/file?path=" + encodeURIComponent(p));
     const lister = p => list(url + "/list?path=" + encodeURIComponent(p));
     return { getter, lister };
@@ -36,7 +38,6 @@ async function createSewerRatFunctions(url, get, list) {
 /**
  * Dataset represented by a SummarizedExperiment in a [**SewerRat**](https://github.com/ArtifactDB/SewerRat)-registered directory.
  * This extends the [AbstractDataset](https://kanaverse.github.io/bakana-takane/AbstractDataset.html) class.
- * @hideconstructor
  */
 export class SewerRatDataset extends bt.AbstractDataset {
     #id;
@@ -58,8 +59,8 @@ export class SewerRatDataset extends bt.AbstractDataset {
      * @return {?function} Previous setting of the listing function.
      */
     static setListFun(fun) {
-        let previous = getFunDataset;
-        getFunDataset = fun;
+        let previous = listFunDataset;
+        listFunDataset = fun;
         return previous;
     }
 
@@ -67,7 +68,7 @@ export class SewerRatDataset extends bt.AbstractDataset {
      * @param {string} path - Absolute path to a SummarizedExperiment on the **SewerRat**'s filesystem.
      * @param {string} url - URL to the **SewerRat** REST API. 
      */
-    static async create(path, url) {
+    constructor(path, url) {
         let get = getFunDataset;
         if (get === null) {
             get = defaultGetFun;
@@ -76,11 +77,7 @@ export class SewerRatDataset extends bt.AbstractDataset {
         if (list === null) {
             list = defaultListFun;
         }
-        const { getter, lister } = await createSewerRatFunctions(url, get, list);
-        return new SewerRatDataset(path, url, getter, lister);
-    }
-
-    constructor(path, url, getter, lister) {
+        const { getter, lister } = createSewerRatFunctions(url, get, list);
         super(path, getter, lister);
         this.#id = { path, url };
     }
@@ -145,7 +142,7 @@ export class SewerRatDataset extends bt.AbstractDataset {
         }
         const id = JSON.parse(args.id);
 
-        let output = await SewerRatDataset.create(id.path, id.url);
+        let output = new SewerRatDataset(id.path, id.url);
         output.setOptions(options);
         return output;
     }
@@ -154,7 +151,6 @@ export class SewerRatDataset extends bt.AbstractDataset {
 /**
  * Result represented as a SummarizedExperiment in the [**gypsum**](https://github.com/ArtifactDB/gypsum-worker) store.
  * This extends the [AbstractResult](https://kanaverse.github.io/bakana-takane/AbstractResult.html) class.
- * @hideconstructor
  */
 export class SewerRatResult extends bt.AbstractResult {
     /**
@@ -174,8 +170,8 @@ export class SewerRatResult extends bt.AbstractResult {
      * @return {?function} Previous setting of the listing function.
      */
     static setListFun(fun) {
-        let previous = getFunDataset;
-        getFunDataset = fun;
+        let previous = listFunDataset;
+        listFunDataset = fun;
         return previous;
     }
 
@@ -183,7 +179,7 @@ export class SewerRatResult extends bt.AbstractResult {
      * @param {string} path - Absolute path to a SummarizedExperiment on the **SewerRat**'s filesystem.
      * @param {string} url - URL to the **SewerRat** REST API. 
      */
-    static async create(path, url) {
+    constructor(path, url) {
         let get = getFunResult;
         if (get === null) {
             get = defaultGetFun;
@@ -192,11 +188,7 @@ export class SewerRatResult extends bt.AbstractResult {
         if (list === null) {
             list = defaultListFun;
         }
-        const { getter, lister } = await createSewerRatFunctions(url, get, list);
-        return new SewerRatResult(path, getter, lister);
-    }
-
-    constructor(path, getter, lister) {
+        const { getter, lister } = createSewerRatFunctions(url, get, list);
         super(path, getter, lister);
     }
 }
