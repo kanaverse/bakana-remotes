@@ -2,50 +2,41 @@ import * as bakana from "bakana";
 import * as scran from "scran.js";
 import * as remotes from "../src/index.js";
 import * as utils from "./utils.js";
-import { S3Client } from '@aws-sdk/client-s3';
-import { S3SyncClient } from 's3-sync-client';
 import * as fs from "fs";
 
-if (!fs.existsSync("files")) {
-    fs.mkdirSync("files");
-}
-const target = "files/manual";
-
-beforeAll(async () => {
-    await utils.initializeAll();
-
-    // Let's just pull down the entire directory with our desired contents.
-    if (!fs.existsSync(target)) {
-        const cred_res = await fetch("https://gypsum.artifactdb.com/credentials/s3-api");
-        if (!cred_res.ok) {
-            throw new Error("failed to fetch S3 credentials");
-        }
-        const credentials = await cred_res.json();
-        const client = new S3Client({
-            region: "auto",
-            endpoint: credentials.endpoint,
-            credentials: { accessKeyId: credentials.key, secretAccessKey: credentials.secret }
-        });
-        const { sync } = new S3SyncClient({ client: client });
-        await sync("s3://" + credentials.bucket + "/scRNAseq/zeisel-brain-2015/2023-12-14", target, { del: true });
-    }
-});
+beforeAll(utils.initializeAll);
 afterAll(async () => await bakana.terminate());
 
+// I can't be bothered to set up an actual SewerRat instance, so instead we'll
+// just re-use the Gypsum data store to mock the getter and listing functions.
+const gypsumUrl = "https://gypsum.artifactdb.com"
 const pseudoGet = url => {
     const path = url.replace(/.*path=/, "");
-    return fs.readFileSync(decodeURIComponent(path));
+    return utils.downloader(gypsumUrl + "/file/" + path);
 }
 remotes.SewerRatDataset.setGetFun(pseudoGet);
 remotes.SewerRatResult.setGetFun(pseudoGet);
 
-const pseudoList = url => {
+const pseudoList = async url => {
     const path = url.replace(/.*path=/, "");
-    return fs.readdirSync(decodeURIComponent(path));
+    const res = await fetch(gypsumUrl + "/list?prefix=" + path + "%2F");
+    if (!res.ok) {
+        throw new Error("failed to list path prefix '" + path + "'");
+    }
+    const listing = await res.json();
+    for (let [i, k] of listing.entries()) {
+        if (k.endsWith("/")) {
+            k = k.slice(0, k.length - 1);
+        }
+        const j = k.lastIndexOf("/");
+        listing[i] = k.slice(j + 1, k.length);
+    }
+    return listing;
 }
 remotes.SewerRatDataset.setListFun(pseudoList);
 remotes.SewerRatResult.setListFun(pseudoList);
 
+const target = "scRNAseq/zeisel-brain-2015/2023-12-14"
 const srdb = new remotes.SewerRatDataset(target, "https://sewerrat.com");
 
 test("SewerRat abbreviation works as expected", async () => {
