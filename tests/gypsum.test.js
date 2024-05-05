@@ -11,7 +11,7 @@ remotes.GypsumDataset.setGetFun(utils.downloader);
 remotes.GypsumResult.setGetFun(utils.downloader);
 
 test("gypsum abbreviation works as expected", async () => {
-    let gdb = await remotes.GypsumDataset.create(details.project, details.asset, details.version, details.path);
+    let gdb = new remotes.GypsumDataset(details.project, details.asset, details.version, details.path);
     let abbrev = gdb.abbreviate();
     expect(abbrev.id.project).toEqual(details.project);
     expect(abbrev.id.asset).toEqual(details.asset);
@@ -22,7 +22,7 @@ test("gypsum abbreviation works as expected", async () => {
 })
 
 test("gypsum preflight works as expected", async () => {
-    let gdb = await remotes.GypsumDataset.create(details.project, details.asset, details.version, details.path);
+    let gdb = new remotes.GypsumDataset(details.project, details.asset, details.version, details.path);
     let pre = await gdb.summary();
     expect(pre.modality_assay_names.gene).toEqual(["counts"]);
     expect(pre.modality_assay_names.ERCC).toEqual(["counts"]);
@@ -32,7 +32,7 @@ test("gypsum preflight works as expected", async () => {
 })
 
 test("gypsum loading works as expected", async () => {
-    let gdb = await remotes.GypsumDataset.create(details.project, details.asset, details.version, details.path);
+    let gdb = new remotes.GypsumDataset(details.project, details.asset, details.version, details.path);
     let loaded = await gdb.load();
     expect(loaded.features.RNA.numberOfRows()).toBeGreaterThan(0);
     expect(loaded.cells.numberOfRows()).toBeGreaterThan(0);
@@ -45,7 +45,7 @@ test("gypsum loading works as expected", async () => {
     expect(loaded.features.RNA.rowNames().length).toBeGreaterThan(0); // check that the primary ID was correctly set.
 
     // Trying again with strings everywhere.
-    let copy = await remotes.GypsumDataset.create(details.project, details.asset, details.version, details.path);
+    let copy = new remotes.GypsumDataset(details.project, details.asset, details.version, details.path);
     copy.setOptions({
         rnaCountAssay: "counts",
         adtExperiment: "ERCC",
@@ -68,7 +68,7 @@ test("gypsum loading works as expected", async () => {
 
 test("gypsum loading works as part of the wider bakana analysis", async () => {
     bakana.availableReaders["gypsum"] = remotes.GypsumDataset;
-    let gdb = await remotes.GypsumDataset.create(details.project, details.asset, details.version, details.path);
+    let gdb = new remotes.GypsumDataset(details.project, details.asset, details.version, details.path);
     let files = { default: gdb };
 
     let state = await bakana.createAnalysis();
@@ -108,7 +108,7 @@ test("gypsum loading works as part of the wider bakana analysis", async () => {
 })
 
 test("gypsum result loading works as expected", async () => {
-    let gdb = await remotes.GypsumResult.create(details.project, details.asset, details.version, details.path);
+    let gdb = new remotes.GypsumResult(details.project, details.asset, details.version, details.path);
     let pre = await gdb.summary();
     expect(pre.modality_assay_names.gene).toEqual(["counts"]);
     expect(pre.modality_assay_names.ERCC).toEqual(["counts"]);
