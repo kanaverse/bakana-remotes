@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>gypsum.js - Documentation</title>
+    <title>SewerRat.js - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -34,7 +34,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">gypsum.js</h1>
+    <h1 class="page-title">SewerRat.js</h1>
     
 
     
@@ -52,6 +52,8 @@ import * as utils from "./utils.js";
 
 var getFunDataset = null;
 var getFunResult = null;
+var listFunDataset = null;
+var listFunResult = null;
 
 async function defaultGetFun(u) {
     const res = await fetch(u);
@@ -63,48 +65,27 @@ async function defaultGetFun(u) {
     return new Uint8Array(await res.arrayBuffer());
 }
 
-async function createTakaneFunctions(url, prefix, path, get) {
-    const overall = url + "/" + prefix;
-    if (path !== null) {
-        overall += "/" + path;
+async function defaultListFun(u) {
+    const res = await fetch(u);
+    if (res.ok) {
+        const err = Error("failed to fetch '" + u + "'");
+        err.status_code = res.status_code;
+        return err;
     }
-    const raw_man = await get(overall + "/..manifest");
-    const dec = new TextDecoder;
-    const man = JSON.parse(dec.decode(raw_man));
+    return res.json();
+}
 
-    const contents = {};
-    for (const k of Object.keys(man)) {
-        const comp = k.split("/");
-        let step = prefix;
-        for (var i = 0; i &lt; comp.length; i++) {
-            if (!(step in contents)) {
-                contents[step] = new Set;
-            }
-            contents[step].add(comp[i]);
-            step += "/" + comp[i];
-        }
-    }
-
-    for (const [k, v] of Object.entries(contents)) {
-        contents[k] = Array.from(v);
-    }
-
-    const getter = p => get(url + "/" + p);
-    const lister = p => {
-        if (!(p in contents)) {
-            throw new Error("no directory listing available for '" + p + "'");
-        }
-        return contents[p];
-    };
+function createSewerRatFunctions(url, get, list) {
+    const getter = p => get(url + "/retrieve/file?path=" + encodeURIComponent(p));
+    const lister = p => list(url + "/list?path=" + encodeURIComponent(p));
     return { getter, lister };
 }
 
 /**
- * Dataset represented by a SummarizedExperiment in the [**gypsum**](https://github.com/ArtifactDB/gypsum-worker) store.
+ * Dataset represented by a SummarizedExperiment in a [**SewerRat**](https://github.com/ArtifactDB/SewerRat)-registered directory.
  * This extends the [AbstractDataset](https://kanaverse.github.io/bakana-takane/AbstractDataset.html) class.
- * @hideconstructor
  */
-export class GypsumDataset extends bt.AbstractDataset {
+export class SewerRatDataset extends bt.AbstractDataset {
     #id;
 
     /**
@@ -119,29 +100,32 @@ export class GypsumDataset extends bt.AbstractDataset {
     }
 
     /**
-     * @param {string} project - Name of the project.
-     * @param {string} asset - Name of the asset.
-     * @param {string} version - Name of the version.
-     * @param {?string} path - Path to the SummarizedExperiment inside the version directory.
-     * This can be `null` if the SummarizedExperiment exists at the root of the directory.
-     * @param {string} [url=https://data-gypsum.artifactdb.com] - URL to the **gypsum** bucket contents.
+     * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a JSON object.
+     * Alternatively `null`, to reset the function to its default value based on `fetch`.
+     * @return {?function} Previous setting of the listing function.
      */
-    static async create(project, asset, version, path, url = "https://data-gypsum.artifactdb.com") {
+    static setListFun(fun) {
+        let previous = listFunDataset;
+        listFunDataset = fun;
+        return previous;
+    }
+
+    /**
+     * @param {string} path - Absolute path to a SummarizedExperiment on the **SewerRat**'s filesystem.
+     * @param {string} url - URL to the **SewerRat** REST API. 
+     */
+    constructor(path, url) {
         let get = getFunDataset;
         if (get === null) {
             get = defaultGetFun;
         }
-        const { getter, lister } = await createTakaneFunctions(url, project + "/" + asset + "/" + version, path, get);
-        return new GypsumDataset(project, asset, version, path, url, getter, lister);
-    }
-
-    constructor(project, asset, version, path, url, getter, lister) {
-        let combined = project + "/" + asset + "/" + version;
-        if (path !== null) {
-            combined += "/" + path;
+        let list = listFunDataset;
+        if (list === null) {
+            list = defaultListFun;
         }
-        super(combined, getter, lister);
-        this.#id = { project, asset, version, path, url };
+        const { getter, lister } = createSewerRatFunctions(url, get, list);
+        super(path, getter, lister);
+        this.#id = { path, url };
     }
 
     /**
@@ -149,7 +133,7 @@ export class GypsumDataset extends bt.AbstractDataset {
      * @static
      */
     static format() {
-        return "gypsum";
+        return "SewerRat";
     }
 
     /**
@@ -185,9 +169,9 @@ export class GypsumDataset extends bt.AbstractDataset {
     }
 
     /**
-     * @param {Array} files - Array of objects like that produced by {@linkcode GypsumDataset#serialize serialize}.
+     * @param {Array} files - Array of objects like that produced by {@linkcode CollaboratordbDataset#serialize serialize}.
      * @param {object} options - Object containing additional options to be passed to the constructor.
-     * @return {GypsumDataset} A new instance of this class.
+     * @return {CollaboratordbDataset} A new instance of this class.
      * @static
      */
     static async unserialize(files, options) {
@@ -200,11 +184,11 @@ export class GypsumDataset extends bt.AbstractDataset {
         }
 
         if (!("id" in args)) {
-            throw new Error("expected a file of type 'id' when unserializing a GypsumDataset"); 
+            throw new Error("expected a file of type 'id' when unserializing SewerRat dataset"); 
         }
         const id = JSON.parse(args.id);
 
-        let output = await GypsumDataset.create(id.project, id.asset, id.version, id.path, id.url);
+        let output = new SewerRatDataset(id.path, id.url);
         output.setOptions(options);
         return output;
     }
@@ -213,13 +197,12 @@ export class GypsumDataset extends bt.AbstractDataset {
 /**
  * Result represented as a SummarizedExperiment in the [**gypsum**](https://github.com/ArtifactDB/gypsum-worker) store.
  * This extends the [AbstractResult](https://kanaverse.github.io/bakana-takane/AbstractResult.html) class.
- * @hideconstructor
  */
-export class GypsumResult extends bt.AbstractResult {
+export class SewerRatResult extends bt.AbstractResult {
     /**
      * @param {function} get - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
      * Alternatively `null`, to reset the function to its default value based on `fetch`.
-     * @return {?function} Previous setting of the getter function.
+     * @return {?function} Previous setting of the GET function.
      */
     static setGetFun(fun) {
         let previous = getFunResult;
@@ -228,28 +211,31 @@ export class GypsumResult extends bt.AbstractResult {
     }
 
     /**
-     * @param {string} project - Name of the project.
-     * @param {string} asset - Name of the asset.
-     * @param {string} version - Name of the version.
-     * @param {?string} path - Path to the SummarizedExperiment inside the version directory.
-     * This can be `null` if the SummarizedExperiment exists at the root of the directory.
-     * @param {string} [url=https://data-gypsum.artifactdb.com] - URL to the **gypsum** bucket contents.
+     * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a JSON object.
+     * Alternatively `null`, to reset the function to its default value based on `fetch`.
+     * @return {?function} Previous setting of the listing function.
      */
-    static async create(project, asset, version, path, url = "https://data-gypsum.artifactdb.com") {
+    static setListFun(fun) {
+        let previous = listFunDataset;
+        listFunDataset = fun;
+        return previous;
+    }
+
+    /**
+     * @param {string} path - Absolute path to a SummarizedExperiment on the **SewerRat**'s filesystem.
+     * @param {string} url - URL to the **SewerRat** REST API. 
+     */
+    constructor(path, url) {
         let get = getFunResult;
         if (get === null) {
             get = defaultGetFun;
         }
-        const { getter, lister } = await createTakaneFunctions(url, project + "/" + asset + "/" + version, path, get);
-        return new GypsumResult(project, asset, version, path, url, getter, lister);
-    }
-
-    constructor(project, asset, version, path, url, getter, lister) {
-        let combined = project + "/" + asset + "/" + version;
-        if (path !== null) {
-            combined += "/" + path;
+        let list = listFunDataset;
+        if (list === null) {
+            list = defaultListFun;
         }
-        super(combined, getter, lister);
+        const { getter, lister } = createSewerRatFunctions(url, get, list);
+        super(path, getter, lister);
     }
 }
 </code></pre>

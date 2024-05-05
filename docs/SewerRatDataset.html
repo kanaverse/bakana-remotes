@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>GypsumDataset - Documentation</title>
+    <title>SewerRatDataset - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -34,7 +34,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">GypsumDataset</h1>
+    <h1 class="page-title">SewerRatDataset</h1>
     
 
     
@@ -47,10 +47,10 @@
 <header>
     
         <h2>
-        GypsumDataset
+        SewerRatDataset
         </h2>
         
-            <div class="class-description usertext"><p>Dataset represented by a SummarizedExperiment in the <a href="https://github.com/ArtifactDB/gypsum-worker"><strong>gypsum</strong></a> store.
+            <div class="class-description usertext"><p>Dataset represented by a SummarizedExperiment in a <a href="https://github.com/ArtifactDB/SewerRat"><strong>SewerRat</strong></a>-registered directory.
 This extends the <a href="https://kanaverse.github.io/bakana-takane/AbstractDataset.html">AbstractDataset</a> class.</p></div>
         
     
@@ -58,37 +58,15 @@ This extends the <a href="https://kanaverse.github.io/bakana-takane/AbstractData
 
 <article>
     
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="GypsumDataset.html">GypsumDataset</a></dt>
-            <dd></dd>
-        </dl>
-    
-    
-    
-
-     
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
+        <div class="container-overview">
         
             
 
     
+    <h2>Constructor</h2>
+    
 
-    <h4 class="name" id=".create"><span class="type-signature">(async, static) </span>create<span class="signature">(project, asset, version, path<span class="signature-attributes">nullable</span>, url<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="SewerRatDataset"><span class="type-signature"></span>new SewerRatDataset<span class="signature">(path, url)</span><span class="type-signature"></span></h4>
 
     
 
@@ -100,7 +78,7 @@ This extends the <a href="https://kanaverse.github.io/bakana-takane/AbstractData
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="gypsum.js.html">gypsum.js</a>, <a href="gypsum.js.html#line83">line 83</a>
+        <a href="SewerRat.js.html">SewerRat.js</a>, <a href="SewerRat.js.html#line42">line 42</a>
     </li></ul></dd>
     
 
@@ -162,11 +140,7 @@ This extends the <a href="https://kanaverse.github.io/bakana-takane/AbstractData
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
-        
-        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -174,111 +148,6 @@ This extends the <a href="https://kanaverse.github.io/bakana-takane/AbstractData
     </thead>
 
     <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>project</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>Name of the project.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>asset</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>Name of the asset.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>version</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>Name of the version.</p></td>
-        </tr>
-
     
 
         <tr>
@@ -296,25 +165,10 @@ This extends the <a href="https://kanaverse.github.io/bakana-takane/AbstractData
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-                    &lt;nullable><br>
-                
-
-                
-                </td>
-            
 
             
-                <td class="default">
-                
-                </td>
-            
 
-            <td class="description last"><p>Path to the SummarizedExperiment inside the version directory.
-This can be <code>null</code> if the SummarizedExperiment exists at the root of the directory.</p></td>
+            <td class="description last"><p>Absolute path to a SummarizedExperiment on the <strong>SewerRat</strong>'s filesystem.</p></td>
         </tr>
 
     
@@ -334,26 +188,10 @@ This can be <code>null</code> if the SummarizedExperiment exists at the root of 
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
 
             
-                <td class="default">
-                
-                    <code>https://data-gypsum.artifactdb.com</code>
-                
-                </td>
-            
 
-            <td class="description last"><p>URL to the <strong>gypsum</strong> bucket contents.</p></td>
+            <td class="description last"><p>URL to the <strong>SewerRat</strong> REST API.</p></td>
         </tr>
 
     
@@ -379,6 +217,34 @@ This can be <code>null</code> if the SummarizedExperiment exists at the root of 
 
 
         
+        </div>
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="SewerRatDataset.html">SewerRatDataset</a></dt>
+            <dd></dd>
+        </dl>
+    
+    
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
             
 
     
@@ -395,7 +261,7 @@ This can be <code>null</code> if the SummarizedExperiment exists at the root of 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="gypsum.js.html">gypsum.js</a>, <a href="gypsum.js.html#line105">line 105</a>
+        <a href="SewerRat.js.html">SewerRat.js</a>, <a href="SewerRat.js.html#line89">line 89</a>
     </li></ul></dd>
     
 
@@ -500,7 +366,7 @@ This can be <code>null</code> if the SummarizedExperiment exists at the root of 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="gypsum.js.html">gypsum.js</a>, <a href="gypsum.js.html#line69">line 69</a>
+        <a href="SewerRat.js.html">SewerRat.js</a>, <a href="SewerRat.js.html#line50">line 50</a>
     </li></ul></dd>
     
 
@@ -643,7 +509,7 @@ Alternatively <code>null</code>, to reset the function to its default value base
 
     
 
-    <h4 class="name" id=".unserialize"><span class="type-signature">(async, static) </span>unserialize<span class="signature">(files, options)</span><span class="type-signature"> &rarr; {<a href="GypsumDataset.html">GypsumDataset</a>}</span></h4>
+    <h4 class="name" id=".setListFun"><span class="type-signature">(static) </span>setListFun<span class="signature">(fun)</span><span class="type-signature"> &rarr; (nullable) {function}</span></h4>
 
     
 
@@ -655,7 +521,162 @@ Alternatively <code>null</code>, to reset the function to its default value base
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="gypsum.js.html">gypsum.js</a>, <a href="gypsum.js.html#line147">line 147</a>
+        <a href="SewerRat.js.html">SewerRat.js</a>, <a href="SewerRat.js.html#line61">line 61</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fun</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A (possibly <code>async</code>) function that accepts a URL and returns a JSON object.
+Alternatively <code>null</code>, to reset the function to its default value based on <code>fetch</code>.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Previous setting of the listing function.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".unserialize"><span class="type-signature">(async, static) </span>unserialize<span class="signature">(files, options)</span><span class="type-signature"> &rarr; {CollaboratordbDataset}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="SewerRat.js.html">SewerRat.js</a>, <a href="SewerRat.js.html#line131">line 131</a>
     </li></ul></dd>
     
 
@@ -745,7 +766,7 @@ Alternatively <code>null</code>, to reset the function to its default value base
 
             
 
-            <td class="description last"><p>Array of objects like that produced by <a href="GypsumDataset.html#serialize"><code>serialize</code></a>.</p></td>
+            <td class="description last"><p>Array of objects like that produced by <code>serialize</code>.</p></td>
         </tr>
 
     
@@ -805,7 +826,7 @@ Alternatively <code>null</code>, to reset the function to its default value base
     </dt>
     <dd>
         
-<span class="param-type"><a href="GypsumDataset.html">GypsumDataset</a></span>
+<span class="param-type">CollaboratordbDataset</span>
 
 
     </dd>
@@ -832,7 +853,7 @@ Alternatively <code>null</code>, to reset the function to its default value base
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="gypsum.js.html">gypsum.js</a>, <a href="gypsum.js.html#line112">line 112</a>
+        <a href="SewerRat.js.html">SewerRat.js</a>, <a href="SewerRat.js.html#line96">line 96</a>
     </li></ul></dd>
     
 
@@ -937,7 +958,7 @@ Alternatively <code>null</code>, to reset the function to its default value base
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="gypsum.js.html">gypsum.js</a>, <a href="gypsum.js.html#line125">line 125</a>
+        <a href="SewerRat.js.html">SewerRat.js</a>, <a href="SewerRat.js.html#line109">line 109</a>
     </li></ul></dd>
     
 
