@@ -1,6 +1,6 @@
 {
   "name": "bakana-remotes",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Fetch remote single-cell RNA-seq datasets for input into the bakana analysis pipeline.",
   "type": "module",
   "main": "src/index.js",
@@ -27,8 +27,6 @@
     "bakana": "^3.0.0",
     "bakana-takane": "^0.1.0",
     "bioconductor": "^0.3.1",
-    "pako": "^2.0.4",
-    "papaparse": "^5.3.2",
     "scran.js": "^3.0.0"
   },
   "devDependencies": {
