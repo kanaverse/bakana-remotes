@@ -12,8 +12,6 @@ Currently we support:
 
 - [**takane**](https://github.com/ArtifactDB/takane)-formatted -`SummarizedExperiment` objects in the [**gypsum**](https://github.com/ArtifactDB/gypsum-worker) bucket.
 - [**takane**](https://github.com/ArtifactDB/takane)-formatted -`SummarizedExperiment` objects via the [**SewerRat**](https://github.com/ArtifactDB/gypsum-worker) API.
-- Selected count matrices and row/column `DataFrame`s from [ExperimentHub](https://bioconductor.org/packages/ExperimentHub).
-  (This is soft-deprecated as the datasets are a subset of those provided via **gypsum**.)
 
 ## Quick start
 
@@ -47,7 +45,7 @@ These objects can then be used in an entry of `datasets` in [`bakana.runAnalysis
 We also provide the equivalent `Result` objects, if users just want to read existing analysis results:
 
 ```js
-let gyp2 = new remotes.GypsumDataset(
+let gyp2 = new remotes.GypsumResult(
     "scRNAseq", 
     "ernst-spermatogenesis-2019", 
     "2023-12-21",
@@ -64,5 +62,6 @@ Check out the [API documentation](https://kanaverse.github.io/bakana-remotes) fo
 
 ## Links
 
-See the [**bakana**](https://github.com/LTLA/bakana) documentation for more details on how to create a [custom `Dataset` reader](https://github.com/LTLA/bakana/blob/master/docs/related/custom_readers.md).
+See the [**bakana**](https://github.com/kanaverse/bakana) documentation for more details on how to create a 
+[custom `Dataset` reader](https://github.com/kanaverse/bakana/blob/master/docs/related/custom_readers.md).
 Implementations of readers for other databases are welcome.
