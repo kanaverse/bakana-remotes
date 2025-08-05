@@ -23,16 +23,13 @@
   },
   "license": "MIT",
   "dependencies": {
-    "artifactdb": "^0.1.1",
-    "bakana": "^3.0.0",
-    "bakana-takane": "^0.1.0",
-    "bioconductor": "^0.3.1",
-    "scran.js": "^3.0.0"
+    "bakana": "^3.1.0",
+    "bioconductor": "^0.4.0",
+    "scran.js": "^4.0.0"
   },
   "devDependencies": {
-    "docdash": "^1.2.0",
-    "isomorphic-fetch": "^3.0.0",
-    "jest": "^27.5.1",
-    "jsdoc": "^3.6.10"
+    "docdash": "^2.0.2",
+    "jest": "^30.0.1",
+    "jsdoc": "^4.0.1"
   }
 }

@@ -1,75 +1,60 @@
-import * as scran from "scran.js";
-import * as bioc from "bioconductor";
 import * as bakana from "bakana";
-import * as bt from "bakana-takane";
 import * as utils from "./utils.js";
 
-var getFunDataset = null;
-var getFunResult = null;
+class GypsumNavigator {
+    #download;
+    #url;
+    #prefix;
+    #path;
+    #manifest;
 
-async function defaultGetFun(u) {
-    const res = await fetch(u);
-    if (res.ok) {
-        const err = Error("failed to fetch '" + u + "'");
-        err.status_code = res.status_code;
-        return err;
+    constructor(prefix, path, url, download) {
+        this.#prefix = prefix;
+        this.#path = path;
+        this.#url = url;
+        this.#download = download;
+        this.#manifest = null;
     }
-    return new Uint8Array(await res.arrayBuffer());
-}
 
-function createTakaneFunctions(url, prefix, path, get) {
-    const getter = p => get(url + "/file/" + encodeURIComponent(p));
+    async get(path, asBuffer) {
+        let full_path = this.#prefix;
+        if (this.#path !== null) {
+            full_path += "/" + this.#path;
+        }
+        full_path += "/" + path;
+        return this.#download(this.#url + "/file/" + encodeURIComponent(full_path));
+    }
 
-    var listing = null;
-    const lister = async p => {
-        if (listing == null) {
-            const manpath = url + "/file/" + encodeURIComponent(prefix + "/..manifest");
-            const raw_man = await get(manpath);
+    async exists(path) {
+        if (this.#manifest == null) {
+            const manuri = this.#url + "/file/" + encodeURIComponent(this.#prefix + "/..manifest");
+            const raw_man = await this.#download(manuri);
             const dec = new TextDecoder;
-            const man = JSON.parse(dec.decode(raw_man));
-
-            listing = {};
-            for (const k of Object.keys(man)) {
-                const comp = k.split("/");
-                let step = prefix;
-                for (var i = 0; i < comp.length; i++) {
-                    if (!(step in listing)) {
-                        listing[step] = new Set;
-                    }
-                    listing[step].add(comp[i]);
-                    step += "/" + comp[i];
-                }
-            }
-
-            for (const [k, v] of Object.entries(listing)) {
-                listing[k] = Array.from(v);
-            }
+            this.#manifest = JSON.parse(dec.decode(raw_man));
         }
+        let lookup = (this.#path === null ? "" : this.#path + "/") + path;
+        return (lookup in this.#manifest);
+    }
 
-        if (!(p in listing)) {
-            throw new Error("no directory listing available for '" + p + "'");
-        }
-        return listing[p];
-    };
-
-    return { getter, lister };
+    clean(localPath) {}
 }
 
 /**
  * Dataset represented by a SummarizedExperiment in the [**gypsum**](https://github.com/ArtifactDB/gypsum-worker) store.
- * This extends the [AbstractDataset](https://kanaverse.github.io/bakana-takane/AbstractDataset.html) class.
+ * This extends the [AbstractDataset](https://kanaverse.github.io/bakana/AbstractAlabasterDataset.html) class.
  */
-export class GypsumDataset extends bt.AbstractDataset {
+export class GypsumDataset extends bakana.AbstractAlabasterDataset {
     #id;
+
+    static #downloadFun = utils.defaultFetch;
 
     /**
      * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
-     * Alternatively `null`, to reset the function to its default value based on `fetch`.
-     * @return {?function} Previous setting of the getter function.
+     * @return {function} Previous setting of the downloader function.
      */
-    static setGetFun(fun) {
-        let previous = getFunDataset;
-        getFunDataset = fun;
+    static setDownloadFun(fun) {
+        let previous = GypsumDataset.#downloadFun;
+        GypsumDataset.#downloadFun = fun;
         return previous;
     }
 
@@ -82,16 +67,7 @@ export class GypsumDataset extends bt.AbstractDataset {
      * @param {string} [url=https://gypsum.artifactdb.com] - URL to the **gypsum** REST API.
      */
     constructor(project, asset, version, path, url = "https://gypsum.artifactdb.com") {
-        let get = getFunDataset;
-        if (get === null) {
-            get = defaultGetFun;
-        }
-        let combined = project + "/" + asset + "/" + version;
-        const { getter, lister } = createTakaneFunctions(url, combined, path, get);
-        if (path !== null) {
-            combined += "/" + path;
-        }
-        super(combined, getter, lister);
+        super(new GypsumNavigator(project + "/" + asset + "/" + version, path, url, GypsumDataset.#downloadFun));
         this.#id = { project, asset, version, path, url };
     }
 
@@ -163,18 +139,19 @@ export class GypsumDataset extends bt.AbstractDataset {
 
 /**
  * Result represented as a SummarizedExperiment in the [**gypsum**](https://github.com/ArtifactDB/gypsum-worker) store.
- * This extends the [AbstractResult](https://kanaverse.github.io/bakana-takane/AbstractResult.html) class.
+ * This extends the [AbstractResult](https://kanaverse.github.io/bakana/AbstractAlabasterResult.html) class.
  * @hideconstructor
  */
-export class GypsumResult extends bt.AbstractResult {
+export class GypsumResult extends bakana.AbstractAlabasterResult {
+    static #downloadFun = utils.defaultFetch;
+
     /**
-     * @param {function} get - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
-     * Alternatively `null`, to reset the function to its default value based on `fetch`.
-     * @return {?function} Previous setting of the getter function.
+     * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
+     * @return {function} Previous setting of the downloader function.
      */
-    static setGetFun(fun) {
-        let previous = getFunResult;
-        getFunResult = fun;
+    static setDownloadFun(fun) {
+        let previous = GypsumResult.#downloadFun;
+        GypsumResult.#downloadFun = fun;
         return previous;
     }
 
@@ -187,15 +164,6 @@ export class GypsumResult extends bt.AbstractResult {
      * @param {string} [url=https://gypsum.artifactdb.com] - URL to the **gypsum** REST API.
      */
     constructor(project, asset, version, path, url = "https://gypsum.artifactdb.com") {
-        let get = getFunResult;
-        if (get === null) {
-            get = defaultGetFun;
-        }
-        let combined = project + "/" + asset + "/" + version;
-        const { getter, lister } = createTakaneFunctions(url, combined, path, get);
-        if (path !== null) {
-            combined += "/" + path;
-        }
-        super(combined, getter, lister);
+        super(new GypsumNavigator(project + "/" + asset + "/" + version, path, url, GypsumResult.#downloadFun));
     }
 }

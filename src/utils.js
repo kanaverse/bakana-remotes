@@ -32,3 +32,11 @@ export function cloneCached(x, cached) {
  *
  * @external SimpleFile
  */ 
+
+export async function defaultDownload(u) {
+    const res = await fetch(u);
+    if (res.ok) {
+        throw new Error("failed to fetch '" + u + "' (" + String(resp.status) + ")");
+    }
+    return new Uint8Array(await res.arrayBuffer());
+}

@@ -6,77 +6,22 @@ import * as utils from "./utils.js";
 beforeAll(utils.initializeAll);
 afterAll(async () => await bakana.terminate());
 
-let ehub = new remotes.ExperimentHubDataset("zeisel-brain");
 remotes.ExperimentHubDataset.setDownloadFun(utils.downloader);
 
-test("ExperimentHub abbreviation works as expected", async () => {
-    let abbrev = ehub.abbreviate();
-    expect(abbrev.id).toBe("zeisel-brain");
-    expect(abbrev.options.primaryRnaFeatureIdColumn).toEqual(0);
-    expect(ehub.constructor.format()).toBe("ExperimentHub");
-})
+test("ExperimentHub reader works as expected", async () => {
+    let ehub = new remotes.ExperimentHubDataset("zeisel-brain");
 
-test("ExperimentHub preflight works as expected", async () => {
-    let summ = await ehub.summary();
-    expect(summ.modality_features.RNA.numberOfRows()).toBeGreaterThan(0);
-    expect(summ.cells.column("level1class").length).toBeGreaterThan(0);
+    let summ = await utils.checkDatasetSummary(ehub);
+    expect(Object.keys(summ.modality_features)).toEqual(["RNA"]);
 
-    let preview = await ehub.previewPrimaryIds();
-    expect("RNA" in preview).toBe(true);
-    expect(preview.RNA.length).toBeGreaterThan(0);
-})
+    let loaded = await utils.checkDatasetLoad(ehub);
+    expect(loaded.matrix.available()).toEqual(["RNA"]);
 
-test("ExperimentHub loading works as expected", async () => {
-    let details = await ehub.load();
-    expect(details.features.RNA.numberOfRows()).toBeGreaterThan(0);
-    expect(details.cells.numberOfRows()).toBeGreaterThan(0);
-    expect(details.cells.hasColumn("level1class")).toBe(true);
+    let copy = await utils.checkDatasetSerialize(ehub);
+    utils.sameDatasetSummary(summ, await copy.summary());
+    utils.sameDatasetLoad(loaded, await copy.load());
 
-    let mat = details.matrix.get("RNA");
-    expect(mat.numberOfRows()).toEqual(details.features["RNA"].numberOfRows());
-    expect(mat.numberOfColumns()).toEqual(details.cells.numberOfRows());
-
-    scran.free(details.matrix);
-})
-
-test("ExperimentHub works as part of the wider bakana analysis", async () => {
-    bakana.availableReaders["ExperimentHub"] = remotes.ExperimentHubDataset;
-    let files = { default: ehub };
-
-    let state = await bakana.createAnalysis();
-    let params = utils.baseParams();
-    await bakana.runAnalysis(state, files, params);
-
-    let nr = state.inputs.fetchCountMatrix().get("RNA").numberOfRows();
-    expect(nr).toBeGreaterThan(0);
-    expect(state.inputs.fetchFeatureAnnotations()["RNA"].numberOfRows()).toBe(nr);
-    expect(state.inputs.fetchCellAnnotations().numberOfRows()).toBeGreaterThan(0);
-
-    expect(state.rna_quality_control.changed).toBe(true);
-    expect(state.rna_pca.changed).toBe(true);
-    expect(state.feature_selection.changed).toBe(true);
-    expect(state.cell_labelling.changed).toBe(true);
-    expect(state.marker_detection.changed).toBe(true);
-
-    // Serialization works as expected.
-    {
-        let saved = [];
-        let saver = (n, k, f) => {
-            saved.push(f.content());
-            return String(saved.length);
-        };
-
-        let serialized = await bakana.serializeConfiguration(state, saver);
-        const dec = new TextDecoder;
-        expect(dec.decode(saved[0])).toBe("zeisel-brain");
-        expect(serialized.parameters).toEqual(bakana.retrieveParameters(state));
-
-        let reloaded = bakana.unserializeDatasets(serialized.datasets, x => saved[Number(x) - 1]); 
-        expect(reloaded.default instanceof remotes.ExperimentHubDataset);
-    }
-
-    // Freeing.
-    await bakana.freeAnalysis(state);
+    ehub.clear();
 })
 
 test("loading of the Segertolpe dataset works as expected", async () => {

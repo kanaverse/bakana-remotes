@@ -1,66 +1,69 @@
-import * as scran from "scran.js";
-import * as bioc from "bioconductor";
 import * as bakana from "bakana";
-import * as bt from "bakana-takane";
 import * as utils from "./utils.js";
 
-var getFunDataset = null;
-var getFunResult = null;
-var listFunDataset = null;
-var listFunResult = null;
+class SewerRatNavigator {
+    #url;
+    #prefix;
+    #download;
+    #check;
 
-async function defaultGetFun(u) {
-    const res = await fetch(u);
-    if (res.ok) {
-        const err = Error("failed to fetch '" + u + "'");
-        err.status_code = res.status_code;
-        return err;
+    constructor(prefix, url, download, check) {
+        this.#prefix = prefix;
+        this.#url = url;
+        this.#download = download;
+        this.#check = check;
     }
-    return new Uint8Array(await res.arrayBuffer());
+
+    async get(path, asBuffer) {
+        return this.#download(this.#url + "/retrieve/file?path=" + encodeURIComponent(this.#prefix + "/" + path));
+    }
+
+    async exists(path) {
+        return this.#check(this.#url + "/retrieve/file?path=" + encodeURIComponent(this.#prefix + "/" + path));
+    }
+
+    clean(localPath) {}
 }
 
-async function defaultListFun(u) {
-    const res = await fetch(u);
-    if (res.ok) {
-        const err = Error("failed to fetch '" + u + "'");
-        err.status_code = res.status_code;
-        return err;
+async function defaultCheck(u) {
+    let resp = await fetch(u, { method: "HEAD" });
+    if (resp.ok) {
+        return true;
+    } else if (resp.status == 404) {
+        return false;
+    } else {
+        throw new Error("failed to check existence of '" + u + "' (" + String(resp.status) + ")");
     }
-    return res.json();
-}
-
-function createSewerRatFunctions(url, get, list) {
-    const getter = p => get(url + "/retrieve/file?path=" + encodeURIComponent(p));
-    const lister = p => list(url + "/list?path=" + encodeURIComponent(p));
-    return { getter, lister };
 }
 
 /**
  * Dataset represented by a SummarizedExperiment in a [**SewerRat**](https://github.com/ArtifactDB/SewerRat)-registered directory.
- * This extends the [AbstractDataset](https://kanaverse.github.io/bakana-takane/AbstractDataset.html) class.
+ * This extends the [AbstractAlabasterDataset](https://kanaverse.github.io/bakana/AbstractAlabasterDataset.html) class.
  */
-export class SewerRatDataset extends bt.AbstractDataset {
+export class SewerRatDataset extends bakana.AbstractAlabasterDataset {
     #id;
+
+    static #downloadFun = utils.defaultDownload;
 
     /**
      * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
-     * Alternatively `null`, to reset the function to its default value based on `fetch`.
-     * @return {?function} Previous setting of the getter function.
+     * @return {function} Previous setting of the download function.
      */
-    static setGetFun(fun) {
-        let previous = getFunDataset;
-        getFunDataset = fun;
+    static setDownloadFun(fun) {
+        let previous = SewerRatDataset.#downloadFun;
+        SewerRatDataset.#downloadFun = fun;
         return previous;
     }
 
+    static #checkFun = defaultCheck;
+
     /**
-     * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a JSON object.
-     * Alternatively `null`, to reset the function to its default value based on `fetch`.
-     * @return {?function} Previous setting of the listing function.
+     * @param {function} fun - A (possibly `async`) function that accepts a URL, performs a HEAD request and returns a Response object.
+     * @return {function} Previous setting of the HEAD function.
      */
-    static setListFun(fun) {
-        let previous = listFunDataset;
-        listFunDataset = fun;
+    static setCheckFun(fun) {
+        let previous = SewerRatDataset.#checkFun;
+        SewerRatDataset.#checkFun = fun;
         return previous;
     }
 
@@ -69,16 +72,7 @@ export class SewerRatDataset extends bt.AbstractDataset {
      * @param {string} url - URL to the **SewerRat** REST API. 
      */
     constructor(path, url) {
-        let get = getFunDataset;
-        if (get === null) {
-            get = defaultGetFun;
-        }
-        let list = listFunDataset;
-        if (list === null) {
-            list = defaultListFun;
-        }
-        const { getter, lister } = createSewerRatFunctions(url, get, list);
-        super(path, getter, lister);
+        super(new SewerRatNavigator(path, url, SewerRatDataset.#downloadFun, SewerRatDataset.#checkFun));
         this.#id = { path, url };
     }
 
@@ -150,28 +144,30 @@ export class SewerRatDataset extends bt.AbstractDataset {
 
 /**
  * Result represented as a SummarizedExperiment in the [**gypsum**](https://github.com/ArtifactDB/gypsum-worker) store.
- * This extends the [AbstractResult](https://kanaverse.github.io/bakana-takane/AbstractResult.html) class.
+ * This extends the [AbstractAlabasterResult](https://kanaverse.github.io/bakana/AbstractAlabasterResult.html) class.
  */
-export class SewerRatResult extends bt.AbstractResult {
+export class SewerRatResult extends bakana.AbstractAlabasterResult {
+    static #downloadFun = utils.defaultDownload;
+
     /**
-     * @param {function} get - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
-     * Alternatively `null`, to reset the function to its default value based on `fetch`.
-     * @return {?function} Previous setting of the GET function.
+     * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
+     * @return {function} Previous setting of the download function.
      */
-    static setGetFun(fun) {
-        let previous = getFunResult;
-        getFunResult = fun;
+    static setDownloadFun(fun) {
+        let previous = SewerRatResult.#downloadFun;
+        SewerRatResult.#downloadFun = fun;
         return previous;
     }
 
+    static #checkFun = defaultCheck;
+
     /**
-     * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a JSON object.
-     * Alternatively `null`, to reset the function to its default value based on `fetch`.
-     * @return {?function} Previous setting of the listing function.
+     * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a boolean indicating whether that URL can be accessed without a 404.
+     * @return {function} Previous setting of the HEAD function.
      */
-    static setListFun(fun) {
-        let previous = listFunDataset;
-        listFunDataset = fun;
+    static setCheckFun(fun) {
+        let previous = SewerRatResult.#checkFun;
+        SewerRatResult.#checkFun = fun;
         return previous;
     }
 
@@ -180,15 +176,6 @@ export class SewerRatResult extends bt.AbstractResult {
      * @param {string} url - URL to the **SewerRat** REST API. 
      */
     constructor(path, url) {
-        let get = getFunResult;
-        if (get === null) {
-            get = defaultGetFun;
-        }
-        let list = listFunDataset;
-        if (list === null) {
-            list = defaultListFun;
-        }
-        const { getter, lister } = createSewerRatFunctions(url, get, list);
-        super(path, getter, lister);
+        super(new SewerRatNavigator(path, url, SewerRatResult.#downloadFun, SewerRatResult.#checkFun));
     }
 }

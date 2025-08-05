@@ -200,13 +200,7 @@ export class ExperimentHubDataset {
     /****************************************
      ****************************************/
 
-    static #downloadFun = async url => {
-        let resp = await fetch(url);
-        if (!resp.ok) {
-            throw new Error("failed to fetch content at " + url + " (" + resp.status + ")");
-        }
-        return new Uint8Array(await resp.arrayBuffer());
-    }
+    static #downloadFun = utils.defaultDownload;
 
     /** 
      * @param {function} fun - Function that accepts a URL string and downloads the resource,
@@ -477,7 +471,7 @@ export class ExperimentHubDataset {
         let details = registry[this.#id];
         try {
             output.matrix = new scran.MultiMatrix;
-            let counts = scran.initializeSparseMatrixFromRds(this.#counts_handle, { consume: !cache });
+            let counts = scran.initializeSparseMatrixFromRds(this.#counts_handle);
             output.matrix.add("RNA", counts);
             output.features = { "RNA": this.#rowdata };
         } catch (e) {
