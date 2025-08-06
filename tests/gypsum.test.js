@@ -15,6 +15,7 @@ test("gypsum reader works as expected", async () => {
 
     let summ = await utils.checkDatasetSummary(gdb);
     expect(Object.keys(summ.modality_features)).toEqual(["gene", "repeat", "ERCC"]);
+    expect(summ.modality_assay_names["gene"]).toEqual(["counts"]);
 
     gdb.setOptions({ rnaExperiment: "gene", adtExperiment: "ERCC" });
     let loaded = await utils.checkDatasetLoad(gdb);

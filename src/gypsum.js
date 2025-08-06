@@ -46,7 +46,7 @@ class GypsumNavigator {
 export class GypsumDataset extends bakana.AbstractAlabasterDataset {
     #id;
 
-    static #downloadFun = utils.defaultFetch;
+    static #downloadFun = utils.defaultDownload;
 
     /**
      * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
@@ -143,7 +143,7 @@ export class GypsumDataset extends bakana.AbstractAlabasterDataset {
  * @hideconstructor
  */
 export class GypsumResult extends bakana.AbstractAlabasterResult {
-    static #downloadFun = utils.defaultFetch;
+    static #downloadFun = utils.defaultDownload;
 
     /**
      * @param {function} fun - A (possibly `async`) function that accepts a URL and returns a Uint8Array of that URL's contents.
