@@ -6,17 +6,21 @@ on:
 
 name: Publish to NPM 
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: write  # Required to write tags
+
 jobs:
   build:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - name: Checkout the repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v7
       with:
-        node-version: 16
+        node-version: 24
         registry-url: 'https://registry.npmjs.org'
 
     # We only run the remaining (remote-touching) steps if the version has actually changed.
@@ -33,12 +37,10 @@ jobs:
     - name: Publish to NPM
       if: env.UPDATE_REMOTES == 1
       run: npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     - name: Tagging the release
       if: env.UPDATE_REMOTES == 1
-      uses: actions/github-script@v5
+      uses: actions/github-script@v9
       with:
         script: |
           github.rest.git.createRef({

@@ -1,6 +1,6 @@
 {
   "name": "bakana-remotes",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Fetch remote single-cell RNA-seq datasets for input into the bakana analysis pipeline.",
   "type": "module",
   "main": "src/index.js",
@@ -8,9 +8,9 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testTimeout=1000000 --runInBand --detectOpenHandles --forceExit",
     "jsdoc": "npx jsdoc -r src README.md -d docs/built -c docs/jsdoc.config.json"
   },
-  "repository": "github:LTLA/bakana-remotes",
-  "homepage": "https://github.com/LTLA/bakana-remotes#readme",
-  "bugs": "https://github.com/LTLA/bakana-remotes/issues",
+  "repository": "github:kanaverse/bakana-remotes",
+  "homepage": "https://github.com/kanaverse/bakana-remotes#readme",
+  "bugs": "https://github.com/kanaverse/bakana-remotes/issues",
   "keywords": [
     "bioinformatics",
     "single-cell",
