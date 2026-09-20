@@ -17,23 +17,36 @@ class GypsumNavigator {
     }
 
     async get(path, asBuffer) {
-        let full_path = this.#prefix;
-        if (this.#path !== null) {
-            full_path += "/" + this.#path;
+        let relpath = (this.#path === null ? "" : this.#path + "/") + path;
+        let fullpath = this.#prefix + "/" + relpath;
+
+        // Checking manifest if we need to follow a link.
+        let man = await this.manifest();
+        if (relpath in this.#manifest) {
+            const entry = this.#manifest[relpath];
+            if ("link" in entry) {
+                const linktarget = entry["link"];
+                fullpath = linktarget.project + "/" + linktarget.asset + "/" + linktarget.version + "/" + linktarget.path;
+            }
         }
-        full_path += "/" + path;
-        return this.#download(this.#url + "/file/" + encodeURIComponent(full_path));
+
+        return this.#download(this.#url + "/file/" + encodeURIComponent(fullpath));
     }
 
     async exists(path) {
+        let man = await this.manifest();
+        let lookup = (this.#path === null ? "" : this.#path + "/") + path;
+        return (lookup in this.#manifest);
+    }
+
+    async manifest() {
         if (this.#manifest == null) {
             const manuri = this.#url + "/file/" + encodeURIComponent(this.#prefix + "/..manifest");
             const raw_man = await this.#download(manuri);
             const dec = new TextDecoder;
             this.#manifest = JSON.parse(dec.decode(raw_man));
         }
-        let lookup = (this.#path === null ? "" : this.#path + "/") + path;
-        return (lookup in this.#manifest);
+        return this.#manifest;
     }
 
     clean(localPath) {}

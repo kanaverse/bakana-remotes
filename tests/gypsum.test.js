@@ -28,6 +28,27 @@ test("gypsum reader works as expected", async () => {
     gdb.clear();
 })
 
+test("gypsum reader follows links", async () => {
+    // 2024-04-18 links back to an older version.
+    let gdb = new remotes.GypsumDataset("scRNAseq", "nestorowa-hsc-2016", "2024-04-18", null);
+
+    let summ = await utils.checkDatasetSummary(gdb);
+    expect(Object.keys(summ.modality_features)).toEqual(["endogenous", "ERCC", "FACS"]);
+    expect(summ.modality_assay_names["endogenous"]).toEqual(["counts"]);
+
+    gdb.clear();
+})
+
+test("gypsum reader respects a non-NULL path", async () => {
+    let gdb = new remotes.GypsumDataset("scRNAseq", "wu-kidney-2019", "2023-12-20", "disease");
+
+    let summ = await utils.checkDatasetSummary(gdb);
+    expect(Object.keys(summ.modality_features)).toEqual([""]);
+    expect(summ.modality_assay_names[""]).toEqual(["counts"]);
+
+    gdb.clear();
+})
+
 test("gypsum result loading works as expected", async () => {
     let gdb = new remotes.GypsumResult(details.project, details.asset, details.version, details.path);
 
